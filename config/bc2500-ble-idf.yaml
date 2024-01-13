@@ -205,8 +205,8 @@ number:
 
   - platform: template
     name: "D2-53: DOD"
-    state_topic: b2500/2/device/dod
-    command_topic: b2500/2/device/dod/set
+    state_topic: b2500/2/battery/dod
+    command_topic: b2500/2/battery/dod/set
     id: sensor_dod_2
     optimistic: True
     min_value: 10
