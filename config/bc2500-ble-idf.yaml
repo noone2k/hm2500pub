@@ -42,6 +42,7 @@ captive_portal:
 mqtt:
   id: mqtt_client
   broker: !secret mqtt_broker
+  port: !secret mqtt_port
   discovery: False
   reboot_timeout: 0s
   topic_prefix: b2500
