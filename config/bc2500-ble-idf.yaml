@@ -576,6 +576,13 @@ binary_sensor:
     state_topic: b2500/2/extern2/connected
 
 sensor:
+  - platform: uptime
+    name: Uptime Sensor
+    filters:
+      - lambda: return x / 3600.0;
+    unit_of_measurement: "hours"
+    accuracy_decimals: 2
+  
   - platform: template
     name: "D1-i05: PV 1 - Leistung"
     id: sensor_pv_power_in_1_1
