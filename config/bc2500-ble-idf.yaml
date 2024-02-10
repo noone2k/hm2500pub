@@ -741,6 +741,7 @@ sensor:
       return (float)x[0];
 
 script:
+
 # ble communication
 #
 # action ( 00f1 )
@@ -789,10 +790,27 @@ script:
 # cmd     = cmd
 # data    = xx xx xx xx xx ....
 #
-#################################################################
-# send/receive ( ff06 )
+#
+#
+################ maybe direct for arm
+# send ( ff01 )
+#
+# head1    = 0xAA
+# head2(?) = 0x55 ( not length ?!?!? )
+# cmd      = 1x / 2x / 3x ( flash - 30 "open"/ 31 - write / 32 "close" ) / 5x
+# data     = xx xx xx xx xx ....
+# crc      = xor len(paket) -1 
+#
+################ maybe direct for bms
+# send/receive ( ff06 ) 
 #
 # head    = 0xAA
+# len     = 0x05/0x03
+# data    = xx xx xxx ( xx xx )
+# crc     = x1 + x2 + ... + xn
+#
+#
+#   f.ex hw-reset 
 #
 #  -> aa 05 01 00 01 01 00 08
 #  <- aa 01 00 01
