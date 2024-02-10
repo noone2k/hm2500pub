@@ -178,7 +178,7 @@ number:
     id: sensor_dod_1
     optimistic: True
     min_value: 10
-    max_value: 90
+    max_value: 100
     step: 1
     restore_value: True
     on_value:
@@ -212,7 +212,7 @@ number:
     id: sensor_dod_2
     optimistic: True
     min_value: 10
-    max_value: 90
+    max_value: 100
     step: 1
     restore_value: True
     on_value:
@@ -1217,7 +1217,7 @@ script:
           args: [ 'dod' ]
       - if:
           condition:
-            lambda: 'return ( dod <= 90 && dod >= 10);'
+            lambda: 'return ( dod <= 100 && dod >= 10);'
           then:
             - script.execute: 
                 id: ble_command_simple
