@@ -362,6 +362,12 @@ switch:
             switch_cmd: 1
 
   - platform: template
+    id: switch_debug_hexdump
+    name: "INTERNAL:DEBUG HEXDUMP"
+    optimistic: True
+    #assumed_state: True
+
+  - platform: template
     id: switch_opendtu_limit
     name: "MQTT: opendtu - zero power"
     optimistic: True
@@ -1239,12 +1245,17 @@ script:
           args: [ 'ble_device_nr' ]
       - lambda: |-
           ESP_LOGD("notify_parse", "Device: %i", ble_device_nr);
-          if (id(internal_console_dbg)) {
+          /*if (id(internal_console_dbg)) {
             ESP_LOGD("parse", "x[3] = %i", x[3]);
               for (auto b : x) {
                 ESP_LOGD("data", "%.2x \t %i \t %c", b,b,b);
               }
-          }
+          }*/
+
+          if (id(switch_debug_hexdump).state == true) {
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+          }          
+
 
           if ((std::count (x.begin(), x.end(), '_') == 16) || (std::count (x.begin(), x.begin() + 10, '_') == 3)) 
           {   
@@ -1627,7 +1638,6 @@ script:
               ESP_LOGD("data", "%x \t %i \t %x", b,b,b);
             }
           }
-
           else if (x[3] == 0x30) {
             ESP_LOGD("main", "Data: cmd 0x30 ");
             int data_len = x.size();
@@ -1651,43 +1661,21 @@ script:
             //}
             */
           }
-          /*
-          else if (x[3] == 0x30) {
-            ESP_LOGD("main", "Data: cmd 0x30");
-            int data_len = x.size();
-
-            for(int i=0;i<data_len;i++) {
-              int d1 = x[i];
-              ESP_LOGD("data 30" , "%x \t %i \t %c" , d1, d1, char(d1));
-            }
-          }
-          */
-          // debug ???
           else if (x[3] == 0x01) {
             ESP_LOGD("main", "Data: cmd 0x01");
-            int data_len = x.size();
-
-            for(int i=0;i<data_len;i++) {
-              int d1 = x[i];
-              ESP_LOGD("data 01" , "%x \t %i \t %c" , d1, d1, char(d1));
-            }
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
           }
           else if (x[3] == 0x81) {
             ESP_LOGD("main", "Data: cmd 0x81");
-            int data_len = x.size();
-            for(int i=0;i<data_len;i++) {
-              int d1 = x[i];
-              ESP_LOGD("data 81" , "%x \t %i \t %c" , d1, d1, char(d1));
-            }
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
           }
-
           else {
-            int data_len = x.size();
+            /*int data_len = x.size();
             for(int i=0;i<data_len;i++) {
               int d1 = x[i];
               ESP_LOGD("unknown" , "%x \t %i \t %c" , d1, d1, char(d1));
-            }
-
+            }*/
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
           }
 
   - id: power_zero
