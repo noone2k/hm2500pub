@@ -221,6 +221,29 @@ number:
           ble_device_nr: 2
           dod: !lambda return x;
 
+  ### power zero
+  - platform: template
+    name: "MQTT: opendtu set limit"
+    id: mqtt_opendtu_limit
+    internal: False
+    state_topic: !secret mqtt_opendtu_limit_cmd
+    command_topic: !secret mqtt_opendtu_limit_state
+    optimistic: True
+    min_value: 1
+    max_value: 75
+    step: 1
+    restore_value: True
+
+  - platform: template
+    name: "MQTT: opendtu set limit max"
+    id: mqtt_opendtu_limit_max
+    internal: False
+    optimistic: True
+    min_value: 1
+    max_value: 75
+    step: 1
+    restore_value: True
+
 switch:
   - platform: template
     id: switch_powerout_1_1
@@ -337,6 +360,14 @@ switch:
             id: ble_passthrough
             ble_device_nr: 2
             switch_cmd: 1
+
+  - platform: template
+    id: switch_opendtu_limit
+    name: "MQTT: opendtu - zero power"
+    optimistic: True
+    #restore_mode: RESTORE_DEFAULT_ON
+    #assumed_state: True
+           
 text:
   - platform: template
     name: "A1-t01 - Device Type"
@@ -656,6 +687,15 @@ sensor:
       for (auto b : x) { tData.push_back(b); }
       id(ble_notify_parse).execute(2,tData);
       return (float)x[0];
+
+### power zero - mqtt grid power sensor ( any who publish the grid power to mqtt - defined in secrets,yaml )
+  - platform: mqtt_subscribe
+    name: "MQTT: Grid Power"
+    id: mqtt_grid_power
+    topic: !secret mqtt_grid_power
+    on_value:
+      then:    
+        - script.execute: power_zero
 
 ###test
   - platform: ble_client
@@ -1648,4 +1688,42 @@ script:
               ESP_LOGD("unknown" , "%x \t %i \t %c" , d1, d1, char(d1));
             }
 
+          }
+
+  - id: power_zero
+    then:
+    ###   Nulleinspeisung - Powerzero by neromatrix
+    ###                   - mqtt only adaption by noone2k
+    ###   first attempt, use at your own risk !
+    ###   Ver. 0.01m
+    - lambda: |- 
+          if(id(switch_opendtu_limit).state) 
+          {
+            int ptu_min_value =     5;
+            int ptu_max_value =     id(mqtt_opendtu_limit_max).state; // 50; // <- nax rel value -> id(npw2500_zeropower_max_powerlimit_rel).state;
+            int ptu_limit =         0;
+            int ptu_max_power =     900; // max:2 (x:4*2 for 4port using 2port)
+            int grid_to_ptu_ratio = ptu_max_power/100;
+            int grid_min_value =    20;
+            static int ptu_old_limit = 0;  
+            /*
+              <- actual power mqtt -> prev. int(id(npw2500_grid_power).state);
+              keep over grid_min_value
+            */ 
+            int grid_value = int(id(mqtt_grid_power).state) - grid_min_value;;
+
+            ptu_limit = grid_value / grid_to_ptu_ratio + ptu_old_limit;
+            
+            if(ptu_limit > ptu_max_value) ptu_limit = ptu_max_value;
+            if(ptu_limit < ptu_min_value) ptu_limit = ptu_min_value;
+
+            // change only if diff more than +/-1%
+            if ( ptu_limit - ptu_old_limit > 1 || ptu_old_limit - ptu_limit > 1 ) {
+              ESP_LOGD("npw2500","PowerZero PTU old limit  %d, PTU new limit %d, Grid value %d " ,ptu_old_limit, ptu_limit, grid_value);
+              ptu_old_limit = ptu_limit;  
+              //char mtopic[64];
+              //snprintf(mtopic, 64,"openDTU/116482876939/cmd/limit_persistent_relative");
+              //id(mqtt_client).publish(mtopic,to_string(ptu_limit));
+              id(mqtt_opendtu_limit).publish_state(ptu_limit);
+             }
           }
