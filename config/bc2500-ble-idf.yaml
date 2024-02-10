@@ -1,6 +1,16 @@
 esphome:
   name: bc2500-ble-idf
   friendly_name: bc2500-ble-idf
+  on_boot:
+    priority: -100
+    then:
+      - switch.turn_on: switch_opendtu_limit
+      #- switch.turn_off: switch_powerout_1_1
+      #- switch.turn_off: switch_powerout_1_2
+      #- switch.turn_off: switch_powerout_2_1
+      #- switch.turn_off: switch_powerout_2_2
+      #- switch.turn_off: switch_pv2_passthrough_1
+      #- switch.turn_off: switch_pv2_passthrough_2
 
 esp32:
   board: az-delivery-devkit-v4
