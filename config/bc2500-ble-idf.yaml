@@ -1501,17 +1501,31 @@ script:
                       0x00 wifi funktioniert nicht
                       0x01 wifi ok, mqtt nicht verbunden
                       0x02 wifi ok, mqtt connect ok
+                      NEW:
+                      maybe wifi / mqtt
+                      00 = false / false
+                      01 = true / false
+                      02 = false / true
+                      03 = true / true
+                      -------
+                      first part means not wifi connected ?!?!? 
+                      00 = ??? / mqtt not connected
+                      01 = ??? / mqtt not connected
+                      02 = ??? / mqtt connected
+                      03 = ??? / mqtt connected                      
             */
             // wifi and mqtt
             if (ble_device_nr==1) {             
               if( x[15] == 0x00 ) { id(bool_wifi_ok_1).publish_state(false); id(bool_mqtt_ok_1).publish_state(false); }
               if( x[15] == 0x01 ) { id(bool_wifi_ok_1).publish_state(true);  id(bool_mqtt_ok_1).publish_state(false); }
-              if( x[15] == 0x02 ) { id(bool_wifi_ok_1).publish_state(true);  id(bool_mqtt_ok_1).publish_state(true);  }
+              if( x[15] == 0x02 ) { id(bool_wifi_ok_1).publish_state(false);  id(bool_mqtt_ok_1).publish_state(true);  }
+              if( x[15] == 0x03 ) { id(bool_wifi_ok_1).publish_state(true);  id(bool_mqtt_ok_1).publish_state(true);  }
             }
             if (ble_device_nr==2) {             
               if( x[15] == 0x00 ) { id(bool_wifi_ok_2).publish_state(false); id(bool_mqtt_ok_2).publish_state(false); }
               if( x[15] == 0x01 ) { id(bool_wifi_ok_2).publish_state(true);  id(bool_mqtt_ok_2).publish_state(false); }
-              if( x[15] == 0x02 ) { id(bool_wifi_ok_2).publish_state(true);  id(bool_mqtt_ok_2).publish_state(true);  }
+              if( x[15] == 0x02 ) { id(bool_wifi_ok_2).publish_state(false);  id(bool_mqtt_ok_2).publish_state(true);  }
+              if( x[15] == 0x03 ) { id(bool_wifi_ok_2).publish_state(true);  id(bool_mqtt_ok_2).publish_state(true);  }
             }
 
             // power 1 und 2 enabled/disabled
