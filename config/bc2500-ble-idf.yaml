@@ -52,10 +52,11 @@ time:
   - platform: sntp
     id: sntp_time
     on_time:
-      # Every 5 seconds
-      - seconds: /5
+      # Every 10 seconds
+      - seconds: /10
         then:
           - script.execute: ble_process
+          - script.wait: ble_process
           #- button.press: query_info3
 
 globals:
