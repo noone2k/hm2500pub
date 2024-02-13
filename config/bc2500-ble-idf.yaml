@@ -173,7 +173,7 @@ number:
     command_topic: b2500/1/battery/discharge_treshold/set
     optimistic: True
     min_value: 1
-    max_value: 500
+    max_value: 900
     step: 1
     restore_value: True
     on_value:
@@ -206,7 +206,7 @@ number:
     command_topic: b2500/2/battery/discharge_treshold/set
     optimistic: True
     min_value: 1
-    max_value: 500
+    max_value: 900
     step: 1
     restore_value: True
     on_value:
@@ -799,7 +799,7 @@ script:
 #         = 0x09
 #         = 0x0A
 #         = 0x0E  HW-RESET ????? / send before head 0XAA ( deactivate output ??? )  
-#         = 0x0F  new in fw 131 1Byte   ( 0x01 )
+#         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - temp1_temp2_14-cell-voltage(s)
 #
 #         = 0x30 found in logs ... unknown parm 0x01 ???? answers since fw 131
 #         = 0x14 maybe not for mqtt ... set localtime ??? for auth/certs/challenge requests ????? ( query/set wifi depends ????)
@@ -1261,7 +1261,7 @@ script:
           args: [ 'discharge' ]
       - if:
           condition:
-            lambda: 'return ( discharge <= 500 && discharge >= 1);'
+            lambda: 'return ( discharge <= 900 && discharge >= 1);'
           then:
             - script.execute: 
                 id: ble_command_simple
