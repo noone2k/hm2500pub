@@ -661,6 +661,17 @@ sensor:
     accuracy_decimals: 2
 
 
+  - platform: template
+    name: "D1-i60: Temperatur 1"
+    id: sensor_device_temp1_1
+    state_topic: b2500/1/device/temp1
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "D1-i61: Temperatur 2"
+    id: sensor_device_temp1_2
+    state_topic: b2500/1/device/temp2
+    accuracy_decimals: 0
 
 
   - platform: template
@@ -708,6 +719,17 @@ sensor:
     state_topic: b2500/2/device/fw_version
     accuracy_decimals: 2
 
+  - platform: template
+    name: "D2-i60: Temperatur 1"
+    id: sensor_device_temp2_1
+    state_topic: b2500/2/device/temp1
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "D2-i61: Temperatur 2"
+    id: sensor_device_temp2_2
+    state_topic: b2500/2/device/temp2
+    accuracy_decimals: 0
 
 
   - platform: ble_client
@@ -1481,6 +1503,17 @@ script:
             float dev_version = x[12];
             if (ble_device_nr==1) { id(sensor_device_version_1).publish_state(dev_version / 100); }
             if (ble_device_nr==2) { id(sensor_device_version_2).publish_state(dev_version / 100); }
+
+            // Temperature Sensors 
+            /*
+              [33]  Temp 1
+              [35]  Temp 2
+                    
+            */
+            int dev_temp1 = x[33];
+            int dev_temp2 = x[35];
+            if (ble_device_nr==1) { id(sensor_device_temp1_1).publish_state(dev_temp1); id(sensor_device_temp1_2).publish_state(dev_temp2);}
+            if (ble_device_nr==2) { id(sensor_device_temp2_1).publish_state(dev_temp1); id(sensor_device_temp2_2).publish_state(dev_temp2);}
 
             // 
             /*
