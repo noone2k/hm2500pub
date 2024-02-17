@@ -172,7 +172,7 @@ number:
     state_topic: b2500/1/battery/discharge_treshold
     command_topic: b2500/1/battery/discharge_treshold/set
     optimistic: True
-    min_value: 1
+    min_value: 0
     max_value: 900
     step: 1
     restore_value: True
@@ -205,7 +205,7 @@ number:
     state_topic: b2500/2/battery/discharge_treshold
     command_topic: b2500/2/battery/discharge_treshold/set
     optimistic: True
-    min_value: 1
+    min_value: 0
     max_value: 900
     step: 1
     restore_value: True
@@ -1261,7 +1261,7 @@ script:
           args: [ 'discharge' ]
       - if:
           condition:
-            lambda: 'return ( discharge <= 900 && discharge >= 1);'
+            lambda: 'return ( discharge <= 900 && discharge >= 0);'
           then:
             - script.execute: 
                 id: ble_command_simple
