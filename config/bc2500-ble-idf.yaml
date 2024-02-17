@@ -1808,27 +1808,19 @@ script:
             }
           }
           else if (x[3] == 0x30) {
-            ESP_LOGD("main", "Data: cmd 0x30 ");
+            ESP_LOGD("main", "Data: cmd 0x30");
             int data_len = x.size();
-            int data_pos = 0;
-
-            int rxor = 0;
-            for (int i=0;i<data_len;i++) {
-              rxor = rxor ^ x[i];
+            ESP_LOGD("data 30 - raw" , "Device %i",ble_device_nr);
+            ESP_LOGD("data 30 - raw" , "0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[0], x[1], x[2], x[3]);
+            for(int i=4;i<data_len-1;i++) {
+              float data1 = x[i+1] | x[i+2] << 8 | x[i+3] << 10 | x[i+4] << 18;
+              float data2 = x[i+5] | x[i+6] << 8 | x[i+7] << 10 | x[i+8] << 18;
+              //ESP_LOGD("data 30 - raw" , "0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[i], x[i+1], x[i+2], x[i+3], x[i+4],x[i+5],x[i+6],x[i+7],x[i+8]);
+              ESP_LOGD("data 30 - raw" , "0x%.2x - %.f - %.f", x[i], data1,data2);
+              i += 8;
             }
-
-            /*
-            //if( rxor != id(cmd30_xor_last_1) ) {
-              ESP_LOGD("data 30 - raw" , "Device %i",ble_device_nr); 
-              ESP_LOGD("data 30 - raw" , "0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[0], x[1], x[2], x[3]);
-              for(int i=4;i<data_len-1;i++) {
-                ESP_LOGD("data 30 - raw" , "0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[i], x[i+1], x[i+2], x[i+3], x[i+4],x[i+5],x[i+6],x[i+7],x[i+8]);
-                i += 8;
-              }
-              //ESP_LOGD("data 30 - raw" , " ");
-              id(cmd30_xor_last_1) = rxor;
-            //}
-            */
+            //if (ble_device_nr==1) { id(ble_1_wait_process) = 0; }
+            //if (ble_device_nr==2) { id(ble_2_wait_process) = 0; }
           }
           else if (x[3] == 0x01) {
             ESP_LOGD("main", "Data: cmd 0x01");
