@@ -1140,7 +1140,84 @@ script:
             - globals.set: 
                 id: ble_2_initialized
                 value: '1'
-      
+
+  - id: ble_command_raw_06
+    parameters:
+      ble_device_nr: int
+      ble_cmd_parm: char[]
+    then:
+      - logger.log:
+          format: "ble command parse (raw): %i"
+          args: [ 'ble_device_nr']
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 1);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_1
+                #service_uuid: 'ff00'
+                #characteristic_uuid: 'ff06'
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff06-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat1;
+
+                  for (auto b : ble_cmd_parm) {
+                    rdat1.push_back((unsigned char)b);
+                  }
+
+                  /*                    
+                  int rlen = rdat1.size();
+                  rdat1.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat1[i];
+                  }
+                  rdat1.push_back(rxor);
+                  */
+
+                  //if (id(internal_console_dbg)) {
+                    for (auto b : rdat1) {
+                      ESP_LOGD("COMMAND raw", "%x - %i - %c", b,b,b);
+                    }
+                  //}
+
+                  return rdat1;
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 2);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_2
+                #service_uuid: 'ff00'
+                #characteristic_uuid: 'ff06'
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff06-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat2;
+
+                  for (auto b : ble_cmd_parm) {
+                    rdat2.push_back((unsigned char)b);
+                  }
+
+                  /*                    
+                  int rlen = rdat2.size();
+                  rdat2.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat2[i];
+                  }
+                  rdat2.push_back(rxor);
+                  */
+
+                  //if (id(internal_console_dbg)) {
+                    for (auto b : rdat2) {
+                      ESP_LOGD("COMMAND raw", "%x - %i - %c", b,b,b);
+                    }
+                  //}
+
+                  return rdat2;
+
   - id: ble_process
     then:
       - if:
