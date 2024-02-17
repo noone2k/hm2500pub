@@ -6,6 +6,8 @@ esphome:
     then:
       - switch.turn_on: switch_opendtu_limit
       - switch.turn_on: switch_enhanced_dod
+      - switch.turn_on: switch_enhanced_cmd0F
+      - switch.turn_off: switch_enhanced_cmd30
       #- switch.turn_off: switch_powerout_1_1
       #- switch.turn_off: switch_powerout_1_2
       #- switch.turn_off: switch_powerout_2_1
@@ -64,11 +66,21 @@ time:
     id: sntp_time
     on_time:
       # Every 10 seconds
-      - seconds: /10
+      - seconds: 0,10,20,30,40,50
         then:
           - script.execute: ble_process
           - script.wait: ble_process
-          #- button.press: query_info3
+      # Every 10 seconds
+      - seconds: 5,15,25,35,45,55
+        then:
+          - script.execute: ble_process_cmd0F
+          - script.wait: ble_process_cmd0F
+      # Every minute ( or hour if minutes enabled )
+      - seconds: 2
+        #minutes: 1
+        then:
+          - script.execute: ble_process_cmd30
+          - script.wait: ble_process_cmd30
 
 globals:
   - id: ble_1_connected
@@ -404,6 +416,19 @@ switch:
     #restore_mode: RESTORE_DEFAULT_ON
     #assumed_state: True
 
+  - platform: template
+    id: switch_enhanced_cmd0F
+    name: "ENHANCED: enable Cell Query (cmd0F)"
+    optimistic: True
+    #restore_mode: RESTORE_DEFAULT_ON
+    #assumed_state: True
+
+  - platform: template
+    id: switch_enhanced_cmd30
+    name: "ENHANCED: enable unknown Query (cmd30)"
+    optimistic: True
+    #restore_mode: RESTORE_DEFAULT_ON
+    #assumed_state: True
 
 text:
   - platform: template
@@ -1126,19 +1151,6 @@ script:
                 id: ble_runtime_query
                 ble_device_nr: 1
             - script.wait: ble_runtime_query
-            ### query cmd30 if firmware > 1.30
-            - if:
-                condition:
-                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130);'
-                then:
-                  - script.execute: 
-                      id: ble_runtime_query30
-                      ble_device_nr: 1
-                  - script.wait: ble_runtime_query30
-                  - script.execute: 
-                      id: ble_runtime_query0F
-                      ble_device_nr: 1
-                  - script.wait: ble_runtime_query0F
             ### query deviceinfo if empty
             - if:
                 condition:
@@ -1150,7 +1162,7 @@ script:
                       ble_cmd: 0x04
                       ble_cmd_parm: 0x01
                   - script.wait: ble_command_simple
-
+      - delay: 500ms
       - if:
           condition:
             - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized));'
@@ -1159,19 +1171,6 @@ script:
                 id: ble_runtime_query
                 ble_device_nr: 2
             - script.wait: ble_runtime_query
-            ### query cmd30 if firmware > 1.30
-            - if:
-                condition:
-                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130);'
-                then:
-                  - script.execute: 
-                      id: ble_runtime_query30
-                      ble_device_nr: 2
-                  - script.wait: ble_runtime_query30
-                  - script.execute: 
-                      id: ble_runtime_query0F
-                      ble_device_nr: 2
-                  - script.wait: ble_runtime_query0F
             ### query deviceinfo if empty
             - if:
                 condition:
@@ -1183,6 +1182,66 @@ script:
                       ble_cmd: 0x04
                       ble_cmd_parm: 0x01
                   - script.wait: ble_command_simple            
+
+  - id: ble_process_cmd0F
+    then:
+      - if:
+          condition:
+            - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized) && id(switch_enhanced_cmd0F).state);'
+          then:
+            ### query cmd0F if firmware > 1.30
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130);'
+                then:
+                  - script.execute: 
+                      id: ble_runtime_query0F
+                      ble_device_nr: 1
+                  - script.wait: ble_runtime_query0F
+      - delay: 500ms
+      - if:
+          condition:
+            - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd0F).state);'
+          then:
+            ### query cmd0F if firmware > 1.30
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130);'
+                then:
+                  - script.execute: 
+                      id: ble_runtime_query0F
+                      ble_device_nr: 2
+                  - script.wait: ble_runtime_query0F
+
+  - id: ble_process_cmd30
+    then:
+      - if:
+          condition:
+            - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized) && id(switch_enhanced_cmd30).state);'
+          then:
+            ### query cmd30 if firmware > 1.30
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130);'
+                then:
+                  - script.execute: 
+                      id: ble_runtime_query30
+                      ble_device_nr: 1
+                  - script.wait: ble_runtime_query30
+      - delay: 500ms
+      - if:
+          condition:
+            - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd30).state);'
+          then:
+            ### query cmd30 if firmware > 1.30
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130);'
+                then:
+                  - script.execute: 
+                      id: ble_runtime_query30
+                      ble_device_nr: 2
+                  - script.wait: ble_runtime_query30
 
   - id: ble_runtime_query
     parameters:
