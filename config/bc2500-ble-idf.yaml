@@ -256,6 +256,18 @@ number:
     restore_value: True
 
 switch:
+  - platform: ble_client
+    ble_client_id: bc2500_1
+    name: "D1-90: Bluetooth"
+    state_topic: b2500/1/bluetooth/enabled
+    command_topic: b2500/1/bluetooth/enabled/set
+
+  - platform: ble_client
+    ble_client_id: bc2500_2
+    name: "D2-90: Bluetooth"
+    state_topic: b2500/2/bluetooth/enabled
+    command_topic: b2500/2/bluetooth/enabled/set 
+
   - platform: template
     id: switch_powerout_1_1
     name: "D1-01: Power Out 1"
