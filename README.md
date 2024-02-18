@@ -20,6 +20,8 @@
                 ( kontinuierlich BT erfordlerlich !!!! )
 
         * Enforce DOD - schaltet beim erreichen des DOD die Ausgänge aus
+        * enable Cell Query (cmd0F) - erfragt die Zellspannungen alle 10Sekunden
+        * enable unknown Query (cmd30) - sendet cmd 0x30 ... 1 Minute
         ------ todo ??? ------
         * ??????? DOD - einschalten der Ausgänge beim Erreichen von XX Prozent
         * Enforce Safe Settings - PV1/PV2/PV2Passthrough off / DOD 80 / etc. 
