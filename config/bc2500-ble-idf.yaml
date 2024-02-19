@@ -6,7 +6,7 @@ esphome:
     then:
       - switch.turn_on: switch_opendtu_limit
       - switch.turn_on: switch_enhanced_dod
-      - switch.turn_on: switch_enhanced_cmd0F
+      - switch.turn_off: switch_enhanced_cmd0F
       - switch.turn_off: switch_enhanced_cmd30
       #- switch.turn_off: switch_powerout_1_1
       #- switch.turn_off: switch_powerout_1_2
@@ -175,7 +175,6 @@ button:
   - platform: restart
     id: controller_restart
     name: "Restart Controller"
-
 
 number:
   - platform: template
@@ -1608,8 +1607,13 @@ script:
                         x[Y] | x[Z] << 8;
             */
             int disCharge = x[19] | x[20] << 8;
-            if (ble_device_nr==1) { id(sensor_discharge_treshold_1).publish_state(disCharge); }
-            if (ble_device_nr==2) { id(sensor_discharge_treshold_2).publish_state(disCharge); }
+            if (ble_device_nr==1) { 
+              if (id(sensor_discharge_treshold_1).state != disCharge ) { id(sensor_discharge_treshold_1).publish_state(disCharge); }
+            }
+            if (ble_device_nr==2) { 
+              if (id(sensor_discharge_treshold_2).state != disCharge ) { id(sensor_discharge_treshold_2).publish_state(disCharge); }
+            }
+
 
             // Füllstand des Akkus in Wh
             /*
@@ -1657,8 +1661,13 @@ script:
                     0-100 Prozentualer Anteil der Entladeleistung an der Nennleistung
             */
             int dod_level = x[18];
-            if (ble_device_nr==1) { id(sensor_dod_1).publish_state(dod_level); }
-            if (ble_device_nr==2) { id(sensor_dod_2).publish_state(dod_level); }
+            if (ble_device_nr==1) { 
+              if (id(sensor_dod_1).state != dod_level) { id(sensor_dod_1).publish_state(dod_level); }
+            }
+            if (ble_device_nr==2) { 
+              if (id(sensor_dod_2).state != dod_level) { id(sensor_dod_2).publish_state(dod_level); }
+            }
+            //if (ble_device_nr==2) { id(sensor_dod_2).publish_state(dod_level); }
 
 
             // binary sensor / bool
