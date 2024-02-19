@@ -521,14 +521,14 @@ text:
   - platform: template
     name: "A1-t65: Last Response 1"
     id: txt_last_response_1
-    state_topic: b2500/1/device/last_respone
+    state_topic: b2500/1/device/last_response
     optimistic: true
     max_length: 32
     mode: text
   - platform: template
     name: "A2-t65: Last Response 2"
     id: txt_last_response_2
-    state_topic: b2500/2/device/last_respone
+    state_topic: b2500/2/device/last_response
     optimistic: true
     max_length: 32
     mode: text
