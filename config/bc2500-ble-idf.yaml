@@ -6,7 +6,7 @@ esphome:
     then:
       - switch.turn_on: switch_opendtu_limit
       - switch.turn_on: switch_enhanced_dod
-      - switch.turn_off: switch_enhanced_cmd0F
+      - switch.turn_on: switch_enhanced_cmd0F
       - switch.turn_off: switch_enhanced_cmd30
       #- switch.turn_off: switch_powerout_1_1
       #- switch.turn_off: switch_powerout_1_2
@@ -837,7 +837,7 @@ script:
 #         = 0x03  runtimeInfo     1Byte   (0x01)
 #         = 0x04  DeviceInfo      1Byte   (0x01)
 #         = 0x0B  DOD             1Byte   (0-100)
-#         = 0x0C  Entladeschwelle 2Byte   (0-500)
+#         = 0x0C  Entladeschwelle 2Byte   (0-900)
 #         = 0x0D  PV2-Passtrough  1Byte   (0x00 on / 0x01 off)
 #         = 0x0E  PowerOut        1Byte   (0x00 1-2 off / 0x01 1 on / 0x02 2 on / 0x03 1-2 on)
 #
@@ -1752,18 +1752,27 @@ script:
                       0x02 nur OUT2 Freigabe
                       0x03 OUT1&OUT2 Freigabe        
             */
-            
-            if (ble_device_nr==1) {                         
-              if( x[14] == 0x00 ) { id(switch_powerout_1_1).turn_off(); id(switch_powerout_1_2).turn_off();}
-              if( x[14] == 0x01 ) { id(switch_powerout_1_1).turn_on();  id(switch_powerout_1_2).turn_off();}
-              if( x[14] == 0x02 ) { id(switch_powerout_1_1).turn_off(); id(switch_powerout_1_2).turn_on(); }
-              if( x[14] == 0x03 ) { id(switch_powerout_1_1).turn_on();  id(switch_powerout_1_2).turn_on(); }
+            static int power1_old = 0;  
+            static int power2_old = 0;  
+            if (ble_device_nr==1) { 
+              //ESP_LOGD("POWER1_OUT", "old: %i, new: %i", power1_old,x[14]);
+              if ( x[14] != power1_old ) {
+                if( x[14] == 0x00 ) { id(switch_powerout_1_1).turn_off(); id(switch_powerout_1_2).turn_off();}
+                if( x[14] == 0x01 ) { id(switch_powerout_1_1).turn_on();  id(switch_powerout_1_2).turn_off();}
+                if( x[14] == 0x02 ) { id(switch_powerout_1_1).turn_off(); id(switch_powerout_1_2).turn_on(); }
+                if( x[14] == 0x03 ) { id(switch_powerout_1_1).turn_on();  id(switch_powerout_1_2).turn_on(); }
+                power1_old = x[14];
+              }
             }
             if (ble_device_nr==2) {
-              if( x[14] == 0x00 ) { id(switch_powerout_2_1).turn_off(); id(switch_powerout_2_2).turn_off();}
-              if( x[14] == 0x01 ) { id(switch_powerout_2_1).turn_on();  id(switch_powerout_2_2).turn_off();}
-              if( x[14] == 0x02 ) { id(switch_powerout_2_1).turn_off(); id(switch_powerout_2_2).turn_on(); }
-              if( x[14] == 0x03 ) { id(switch_powerout_2_1).turn_on();  id(switch_powerout_2_2).turn_on(); }
+              //ESP_LOGD("POWER2_OUT", "old: %i, new: %i", power2_old,x[14]);
+              if ( x[14] != power2_old ) {
+                if( x[14] == 0x00 ) { id(switch_powerout_2_1).turn_off(); id(switch_powerout_2_2).turn_off();}
+                if( x[14] == 0x01 ) { id(switch_powerout_2_1).turn_on();  id(switch_powerout_2_2).turn_off();}
+                if( x[14] == 0x02 ) { id(switch_powerout_2_1).turn_off(); id(switch_powerout_2_2).turn_on(); }
+                if( x[14] == 0x03 ) { id(switch_powerout_2_1).turn_on();  id(switch_powerout_2_2).turn_on(); }
+                power2_old = x[14];
+              }
             }
 
             // power 1 und 2 active
@@ -1834,9 +1843,6 @@ script:
               if( x[30] == 0x02 ) { call_30.set_value("non-EU"); }
               call_30.perform();
             }
-
-           
-
           }      
 
           else if (x[3] == 0x04) {
@@ -1940,7 +1946,7 @@ script:
             int ptu_max_power =     900; // max:2 (x:4*2 for 4port using 2port)
             int grid_to_ptu_ratio = ptu_max_power/100;
             int grid_min_value =    20;
-            static int ptu_old_limit = 0;  
+            static int ptu_old_limit = 0;
             /*
               <- actual power mqtt -> prev. int(id(npw2500_grid_power).state);
               keep over grid_min_value
@@ -1977,18 +1983,23 @@ script:
           int res = 101 - dod_level;
           if (x <= res ) {
             ESP_LOGD("enforce_dod","++++ ble_device_nr = %d, batterie_level = %d, dod_level = %d, res = %d" ,ble_device_nr,x,dod_level,res);
-            id(ble_command_simple).execute(ble_device_nr,0x0E,0x00);
             if (ble_device_nr == 1) {
-              //id(switch_powerout_1_1).turn_off();
-              //id(switch_powerout_1_2).turn_off();
-              id(switch_powerout_1_1).publish_state(false);
-              id(switch_powerout_1_2).publish_state(false);
+              if (id(switch_powerout_1_1).state || id(switch_powerout_1_2).state ) {
+                //id(ble_command_simple).execute(ble_device_nr,0x0E,0x00);                
+                //id(switch_powerout_1_1).turn_off();
+                //id(switch_powerout_1_2).turn_off();
+                id(switch_powerout_1_1).publish_state(false);
+                id(switch_powerout_1_2).publish_state(false);
+              }
             }
             if (ble_device_nr == 2) {
-              //id(switch_powerout_2_1).turn_off();
-              //id(switch_powerout_2_2).turn_off();
-              id(switch_powerout_2_1).publish_state(false);
-              id(switch_powerout_2_2).publish_state(false);
+              if (id(switch_powerout_2_1).state || id(switch_powerout_2_2).state ) {
+                //id(ble_command_simple).execute(ble_device_nr,0x0E,0x00);
+                //id(switch_powerout_2_1).turn_off();
+                //id(switch_powerout_2_2).turn_off();
+                id(switch_powerout_2_1).publish_state(false);
+                id(switch_powerout_2_2).publish_state(false);
+              }
             }
             //id(ble_powerout).execute(ble_device_nr);
           } 
