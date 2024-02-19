@@ -518,6 +518,21 @@ text:
     max_length: 8
     mode: text
 
+  - platform: template
+    name: "A1-t65: Last Response 1"
+    id: txt_last_response_1
+    state_topic: b2500/1/device/last_respone
+    optimistic: true
+    max_length: 32
+    mode: text
+  - platform: template
+    name: "A2-t65: Last Response 2"
+    id: txt_last_response_2
+    state_topic: b2500/2/device/last_respone
+    optimistic: true
+    max_length: 32
+    mode: text
+
 binary_sensor:
   - platform: template
     name: "D1-i01: PV 1 - Aktiv"
@@ -1476,6 +1491,10 @@ script:
             ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
           }          
 
+                     
+          auto strTime = id(sntp_time).now().strftime("%d.%m.%Y %H:%M:%S");
+          if (ble_device_nr==1) { id(txt_last_response_1).publish_state(strTime); }
+          if (ble_device_nr==2) { id(txt_last_response_2).publish_state(strTime); }
 
           if ((std::count (x.begin(), x.end(), '_') == 16) || (std::count (x.begin(), x.begin() + 10, '_') == 3)) 
           {   
