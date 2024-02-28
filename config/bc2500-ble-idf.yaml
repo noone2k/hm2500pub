@@ -848,7 +848,7 @@ script:
 # head    = 0x73
 # length  = len(paket)
 # cntl    = 0x23
-# cmd     = 0x02  set Region      1Byte   (0x00 = EU / 0x01 = China / 0x02 = Non-EU)
+# cmd     = 0x02  set Region      1Byte   (0x00 = EU / 0x01 = China / 0x02 = Non-EU / 0xff = not SET)
 #         = 0x03  runtimeInfo     1Byte   (0x01)
 #         = 0x04  DeviceInfo      1Byte   (0x01)
 #         = 0x0B  DOD             1Byte   (0-100)
@@ -1853,6 +1853,7 @@ script:
               if( x[30] == 0x00 ) { call_30.set_value("EU"); }
               if( x[30] == 0x01 ) { call_30.set_value("China"); }
               if( x[30] == 0x02 ) { call_30.set_value("non-EU"); }
+              if( x[30] == 0xff ) { call_30.set_value("not SET"); }
               call_30.perform();
             }
             if (ble_device_nr==2) { 
@@ -1860,6 +1861,7 @@ script:
               if( x[30] == 0x00 ) { call_30.set_value("EU"); }
               if( x[30] == 0x01 ) { call_30.set_value("China"); }
               if( x[30] == 0x02 ) { call_30.set_value("non-EU"); }
+              if( x[30] == 0xff ) { call_30.set_value("not SET"); }
               call_30.perform();
             }
           }      
