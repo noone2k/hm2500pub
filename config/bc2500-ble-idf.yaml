@@ -26,7 +26,7 @@ esp32:
 
 # Enable logging
 logger:
-#  level: INFO
+  level: INFO
 #  level: DEBUG
 #  baud_rate: 0
 
@@ -774,6 +774,42 @@ sensor:
     name: "D2-i61: Temperatur 2"
     id: sensor_device_temp2_2
     state_topic: b2500/2/device/temp2
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "E1-i10: PV - Leistung - 1"
+    id: sensor_pv_power_in_1_S
+    state_topic: b2500/1/pv/power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "E1-i11: PV - Leistung - 2"
+    id: sensor_pv_power_in_2_S
+    state_topic: b2500/2/pv/power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "E1-i12: PV - Leistung - S"
+    id: sensor_pv_power_in_S_S
+    state_topic: b2500/S/pv/power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "E2-i20: Ausgang - Leistung - 1"
+    id: sensor_power_out_1_S
+    state_topic: b2500/1/power/power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "E2-i21: Ausgang - Leistung - 2"
+    id: sensor_power_out_2_S
+    state_topic: b2500/2/power/power
+    accuracy_decimals: 0
+
+  - platform: template
+    name: "E2-i21: Ausgang - Leistung - S"
+    id: sensor_power_out_S_S
+    state_topic: b2500/S/power/power
     accuracy_decimals: 0
 
 
@@ -1553,11 +1589,11 @@ script:
                               - highlimit)/(highlimit - lowlimit) + 100;     // equation of line with two points (0,lowlimit) (100,highlimit)
 
 
-            ESP_LOGD("cellVoltage","soc: %i, temp1: %i, temp2: %i",soc,t1,t2);
-            ESP_LOGD("cellVoltage","cell01: %.f, cell 02: %.f, cell 03: %.f, cell 04: %.f", cellV[0], cellV[1], cellV[2], cellV[3]);
-            ESP_LOGD("cellVoltage","cell05: %.f, cell 06: %.f, cell 07: %.f, cell 08: %.f", cellV[4], cellV[5], cellV[6], cellV[7]);
-            ESP_LOGD("cellVoltage","cell09: %.f, cell 10: %.f, cell 11: %.f, cell 12: %.f", cellV[8], cellV[9], cellV[10], cellV[11]);
-            ESP_LOGD("cellVoltage","cell13: %.f, cell 14: %.f", cellV[12], cellV[13]);
+            ESP_LOGI("cellVoltage","soc: %i, temp1: %i, temp2: %i",soc,t1,t2);
+            ESP_LOGI("cellVoltage","cell01: %.f, cell 02: %.f, cell 03: %.f, cell 04: %.f", cellV[0], cellV[1], cellV[2], cellV[3]);
+            ESP_LOGI("cellVoltage","cell05: %.f, cell 06: %.f, cell 07: %.f, cell 08: %.f", cellV[4], cellV[5], cellV[6], cellV[7]);
+            ESP_LOGI("cellVoltage","cell09: %.f, cell 10: %.f, cell 11: %.f, cell 12: %.f", cellV[8], cellV[9], cellV[10], cellV[11]);
+            ESP_LOGI("cellVoltage","cell13: %.f, cell 14: %.f", cellV[12], cellV[13]);
 
 
             char mtopic[48];
@@ -1613,8 +1649,9 @@ script:
             */
             int pvPower1 = x[6] | x[7] << 8;
             int pvPower2 = x[8] | x[9] << 8;
-            if (ble_device_nr==1) { id(sensor_pv_power_in_1_1).publish_state(pvPower1); id(sensor_pv_power_in_1_2).publish_state(pvPower2); } 
-            if (ble_device_nr==2) { id(sensor_pv_power_in_2_1).publish_state(pvPower1); id(sensor_pv_power_in_2_2).publish_state(pvPower2); }
+            if (ble_device_nr==1) { id(sensor_pv_power_in_1_1).publish_state(pvPower1); id(sensor_pv_power_in_1_2).publish_state(pvPower2); id(sensor_pv_power_in_1_S).publish_state(pvPower1 + pvPower2);} 
+            if (ble_device_nr==2) { id(sensor_pv_power_in_2_1).publish_state(pvPower1); id(sensor_pv_power_in_2_2).publish_state(pvPower2); id(sensor_pv_power_in_2_S).publish_state(pvPower1 + pvPower2); }
+            id(sensor_pv_power_in_S_S).publish_state(id(sensor_pv_power_in_1_S).state + id(sensor_pv_power_in_2_S).state);
             
 
             // Batterie Stand in %
@@ -1657,8 +1694,9 @@ script:
             */
             int powerOut1 = x[24] | x[25] << 8;
             int powerOut2 = x[26] | x[27] << 8;
-            if (ble_device_nr==1) { id(sensor_power_out_1_1).publish_state(powerOut1); id(sensor_power_out_1_2).publish_state(powerOut2); }
-            if (ble_device_nr==2) { id(sensor_power_out_2_1).publish_state(powerOut1); id(sensor_power_out_2_2).publish_state(powerOut2); }
+            if (ble_device_nr==1) { id(sensor_power_out_1_1).publish_state(powerOut1); id(sensor_power_out_1_2).publish_state(powerOut2); id(sensor_power_out_1_S).publish_state(powerOut1 + powerOut2); }
+            if (ble_device_nr==2) { id(sensor_power_out_2_1).publish_state(powerOut1); id(sensor_power_out_2_2).publish_state(powerOut2); id(sensor_power_out_2_S).publish_state(powerOut1 + powerOut2); }
+            id(sensor_power_out_S_S).publish_state(id(sensor_power_out_1_S).state + id(sensor_power_out_2_S).state);
 
             // Geräte Version ( Firmware ? )
             /*
