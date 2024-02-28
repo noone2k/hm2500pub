@@ -121,10 +121,13 @@ ble_client:
         - binary_sensor.template.publish:
             id: bool_ble_ok_1
             state: ON
+        - delay: 500ms
         - script.execute: 
-            id: ble_set_time
+            id: ble_command_simple
             ble_device_nr: 1
-        - script.wait: ble_set_time
+            ble_cmd: 0x02
+            ble_cmd_parm: 0x00
+        - script.wait: ble_command_simple              
         - script.execute: 
             id: ble_set_time
             ble_device_nr: 1
@@ -151,10 +154,13 @@ ble_client:
         - binary_sensor.template.publish:
             id: bool_ble_ok_2
             state: ON
+        - delay: 500ms
         - script.execute: 
-            id: ble_set_time
+            id: ble_command_simple
             ble_device_nr: 2
-        - script.wait: ble_set_time
+            ble_cmd: 0x02
+            ble_cmd_parm: 0x00
+        - script.wait: ble_command_simple              
         - script.execute: 
             id: ble_set_time
             ble_device_nr: 2
