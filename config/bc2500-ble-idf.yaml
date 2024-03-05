@@ -127,7 +127,8 @@ ble_client:
             ble_device_nr: 1
             ble_cmd: 0x02
             ble_cmd_parm: 0x00
-        - script.wait: ble_command_simple              
+        - script.wait: ble_command_simple
+        - delay: 500ms
         - script.execute: 
             id: ble_set_time
             ble_device_nr: 1
@@ -160,7 +161,8 @@ ble_client:
             ble_device_nr: 2
             ble_cmd: 0x02
             ble_cmd_parm: 0x00
-        - script.wait: ble_command_simple              
+        - script.wait: ble_command_simple
+        - delay: 500ms
         - script.execute: 
             id: ble_set_time
             ble_device_nr: 2
@@ -961,13 +963,15 @@ script:
 #
 
   - id: ble_command_simple
+    mode: queued
     parameters:
       ble_device_nr: int
       ble_cmd: int
       ble_cmd_parm: int
     then:
       - logger.log:
-          format: "ble command parse: %i [%i] %i"
+          level: INFO
+          format: "ble command send: %i [%i] %i"
           args: [ 'ble_device_nr','ble_cmd','ble_cmd_parm' ]
       - if:
           condition:
@@ -1046,7 +1050,7 @@ script:
       ble_cmd_parm: string
     then:
       - logger.log:
-          format: "ble command parse: %i [%i]"
+          format: "ble command send: %i [%i]"
           args: [ 'ble_device_nr','ble_cmd']
       - if:
           condition:
@@ -1518,6 +1522,7 @@ script:
       x: char[]
     then:
       - logger.log: 
+          level: INFO
           format: "runtime parse: %i"
           args: [ 'ble_device_nr' ]
       - lambda: |-
