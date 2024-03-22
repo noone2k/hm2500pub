@@ -61,6 +61,8 @@ mqtt:
   id: mqtt_client
   broker: !secret mqtt_broker
   port: !secret mqtt_port
+  username: !secret mqtt_username
+  password: !secret mqtt_password    
   discovery: False
   reboot_timeout: 0s
   topic_prefix: b2500
