@@ -897,12 +897,14 @@ script:
 #         = 0x04  DeviceInfo      1Byte   (0x01)
 #         = 0x0B  DOD             1Byte   (0-100)
 #         = 0x0C  Entladeschwelle 2Byte   (0-900)
-#         = 0x0D  PV2-Passtrough  1Byte   (0x00 on / 0x01 off)
+#         = 0x0D  PV2-Passthrough 1Byte   (0x00 on / 0x01 off)
 #         = 0x0E  PowerOut        1Byte   (0x00 1-2 off / 0x01 1 on / 0x02 2 on / 0x03 1-2 on)
 #
 #         = 0x05  Wifi-Config     xByte   ( ssid<.,.>pwd )
 #         = 0x08  Wifi-State      1Byte   (0x01)  ????
 #
+#         following mqtt parts not implemented - outdated or not implemented in fw <= 1.34
+#         have a look at 0x20/0x21 in 1.34
 #         q&d c&p - more details will be added, maybe ...
 #         = 0x14  set AWS MQTT    xByte   ( url<.,.>Port ) ....
 #         = 0x60  set MQTT Certs  xByte   ( 0x00 = client.key / 0x01 = client.crt / 0x02 = ca.crt + cert len  )
@@ -910,16 +912,21 @@ script:
 #         = 0x62  end MQTT Certs  xByte   (   )
 #
 #         testing / notes
-#         = 0x01  Debug ?!?!      1Byte   (0x00 = off / 0x01 = on) - enables QBLEGATTSNOTIFY notify 1 / 81 ( entspricht ~ runtimeinfo )
-#         = 0x06
-#         = 0x07
-#         = 0x09
-#         = 0x0A
-#         = 0x0E  HW-RESET ????? / send before head 0XAA ( deactivate output ??? )  
-#         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - temp1_temp2_14-cell-voltage(s)
+#         = 0x01  Debug ?!?! ( BLE-Serial ) 1Byte   (0x00 = off / 0x01 = on) - enables QBLEGATTSNOTIFY notify 1 / 81 ( entspricht ~ runtimeinfo )
+#         = 0x14  not for mqtt ... set localtime ??? for auth/certs/challenge requests ????? ( query/set wifi depends ????)
 #
+#         new 1.32
+#         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - temp1_temp2_14-cell-voltage(s)
 #         = 0x30 found in logs ... unknown parm 0x01 ???? answers since fw 131
-#         = 0x14 maybe not for mqtt ... set localtime ??? for auth/certs/challenge requests ????? ( query/set wifi depends ????)
+#
+#         new 1.34
+#         = 0x09  SSID / SignalStrength ( 0x01 )
+#         = 0x20  mqtt related - set server/port ?
+#         = 0x21  mqtt related - set keys ?
+#         = 0x23  get FC41D Version     ( 0x01 )
+#         = 0x25  Reboot                ( 0x01 )
+#         = 0x26  Factory Settings      ( 0x01 )
+#
 #
 # data    = xx xx xx xx xx xx .... / depends on cmd
 # crc     = xor len(paket) - 1 
