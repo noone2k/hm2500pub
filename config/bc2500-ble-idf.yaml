@@ -38,6 +38,11 @@ wifi:
   password: !secret wifi_password
   reboot_timeout: 0s
   fast_connect: True
+  on_connect:
+    - esp32_ble_tracker.start_scan:
+        continuous: true
+  on_disconnect:
+    - esp32_ble_tracker.stop_scan:
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -109,6 +114,9 @@ globals:
     initial_value: '1'
 
 esp32_ble_tracker:
+  scan_parameters:
+    window: 300ms
+    continuous: false
 
 ble_client:
   - mac_address: !secret hm2500_1_mac
