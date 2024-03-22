@@ -192,6 +192,56 @@ button:
     id: controller_restart
     name: "Restart Controller"
 
+  - platform: template
+    id: btn_device_1_reboot
+    name: "D1-60: Reboot B2500"
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x25
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: btn_device_2_reboot
+    name: "D2-60: Reboot B2500"
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 2
+            ble_cmd: 0x25
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+#  - platform: template
+#    id: btn_device_1_factory_settings
+#    name: "D1-63: Factory Settings"
+#    disabled_by_default: True
+#    on_press:
+#      then:
+#        - script.execute: 
+#            id: ble_command_simple
+#            ble_device_nr: 1
+#            ble_cmd: 0x26
+#            ble_cmd_parm: 0x01
+#        - script.wait: ble_command_simple
+#
+#  - platform: template
+#    id: btn_device_2_factory_settings
+#    name: "D2-63: Factory Settings"
+#    disabled_by_default: True
+#    on_press:
+#      then:
+#        - script.execute: 
+#            id: ble_command_simple
+#            ble_device_nr: 2
+#            ble_cmd: 0x26
+#            ble_cmd_parm: 0x01
+#        - script.wait: ble_command_simple
+      
 number:
   - platform: template
     name: "D1-52: Entladeschwelle"
