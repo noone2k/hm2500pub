@@ -474,6 +474,14 @@ text:
     optimistic: true
     max_length: 30
     mode: text
+  - platform: template
+    name: "A1-t10 - FC41D-FW"
+    id: txt_A12_1
+    state_topic: b2500/1/device/fc41d_fw
+    optimistic: true
+    max_length: 30
+    mode: text
+
 
   - platform: template
     name: "A2-t01 - Device Type"
@@ -500,6 +508,13 @@ text:
     name: "A2-t04 - SSID"
     id: txt_A11_2
     state_topic: b2500/2/device/wifi_ssid
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A2-t10 - FC41D-FW"
+    id: txt_A12_2
+    state_topic: b2500/2/device/fc41d_fw
     optimistic: true
     max_length: 30
     mode: text
@@ -1156,7 +1171,7 @@ script:
                   rdat1.at(6) = time.day_of_month;
                   rdat1.at(7) = time.hour;
                   rdat1.at(8) = time.minute;
-                  rdat1.at(9) = time.second + 1;
+                  rdat1.at(9) = time.second;
 
                   int rlen = rdat1.size();
                   rdat1.at(1) = rlen+1;
@@ -1195,7 +1210,7 @@ script:
                   rdat2.at(6) = time.day_of_month;
                   rdat2.at(7) = time.hour;
                   rdat2.at(8) = time.minute;
-                  rdat2.at(9) = time.second + 1;
+                  rdat2.at(9) = time.second;
 
                   int rlen = rdat2.size();
                   rdat2.at(1) = rlen+1;
@@ -1314,6 +1329,18 @@ script:
                       ble_cmd: 0x04
                       ble_cmd_parm: 0x01
                   - script.wait: ble_command_simple
+            ### query FC41D_FW if empty and FW > 133
+            - if:
+                condition:
+                  - lambda: 'return (id(txt_A12_1).state == "" && id(sensor_device_version_1).state * 100 > 133 );'
+                then:
+                  - script.execute: 
+                      id: ble_command_simple
+                      ble_device_nr: 1
+                      ble_cmd: 0x23
+                      ble_cmd_parm: 0x01
+                  - script.wait: ble_command_simple
+                    
       - delay: 500ms
       - if:
           condition:
@@ -1334,6 +1361,17 @@ script:
                       ble_cmd: 0x04
                       ble_cmd_parm: 0x01
                   - script.wait: ble_command_simple            
+            ### query FC41D_FW if empty and FW > 133
+            - if:
+                condition:
+                  - lambda: 'return (id(txt_A12_2).state == "" && id(sensor_device_version_2).state * 100 > 133 );'
+                then:
+                  - script.execute: 
+                      id: ble_command_simple
+                      ble_device_nr: 2
+                      ble_cmd: 0x23
+                      ble_cmd_parm: 0x01
+                  - script.wait: ble_command_simple
 
   - id: ble_process_cmd0F
     then:
@@ -1983,6 +2021,20 @@ script:
             for (auto b : x) {
               ESP_LOGD("data", "%x \t %i \t %x", b,b,b);
             }
+          }
+          else if (x[3] == 0x23) {          
+            ESP_LOGD("main", "Data: fc41d FW ");            
+            int data_len = x.size();
+            unsigned char vFC41D_FW[16];
+
+            for (int i=4;i<data_len-2;i++) {
+              vFC41D_FW[i-4] = char(x[i]);
+            }
+            vFC41D_FW[data_len-6] = 0x00;
+            ESP_LOGI("FC41D FW", "%i: %s", data_len,vFC41D_FW);
+            std::string sFC41D_FW(reinterpret_cast<char*>(vFC41D_FW));
+            if (ble_device_nr==1) { id(txt_A12_1).publish_state(sFC41D_FW); }
+            if (ble_device_nr==2) { id(txt_A12_2).publish_state(sFC41D_FW); }
           }
           else if (x[3] == 0x30) {
             ESP_LOGD("main", "Data: cmd 0x30");
