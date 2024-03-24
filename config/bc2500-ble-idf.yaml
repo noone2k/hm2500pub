@@ -1180,7 +1180,7 @@ script:
       ble_cmd_parm: string
     then:
       - logger.log:
-          format: "ble command send: %i [%i]"
+          format: "ble command send string: %i [%i]"
           args: [ 'ble_device_nr','ble_cmd']
       - if:
           condition:
@@ -1194,6 +1194,8 @@ script:
                 characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
                 value: !lambda |-
                   std::vector<unsigned char> rdat1{ 0x73,0x06,0x23,(unsigned char)ble_cmd};
+
+                  if ( ble_cmd == 0x24) { rdat1.push_back(0xaa); }
 
                   for (auto b : ble_cmd_parm) {
                     rdat1.push_back((unsigned char)b);
@@ -1227,6 +1229,8 @@ script:
                 #characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
                 value: !lambda |-
                   std::vector<unsigned char> rdat2{ 0x73,0x06,0x23,(unsigned char)ble_cmd};
+                  
+                  if ( ble_cmd == 0x24) { rdat2.push_back(0xaa); }
 
                   for (auto b : ble_cmd_parm) {
                     rdat2.push_back((unsigned char)b);
