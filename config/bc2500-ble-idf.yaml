@@ -1392,6 +1392,17 @@ script:
                       ble_cmd: 0x23
                       ble_cmd_parm: 0x01
                   - script.wait: ble_command_simple
+            ### query SSID if empty, wifi connected and FW > 133
+            - if:
+                condition:
+                  - lambda: 'return (id(txt_A11_1).state == "" && id(sensor_device_version_1).state * 100 > 133 && id(bool_wifi_ok_1) );'
+                then:
+                  - script.execute: 
+                      id: ble_command_simple
+                      ble_device_nr: 1
+                      ble_cmd: 0x09
+                      ble_cmd_parm: 0x01
+                  - script.wait: ble_command_simple
                     
       - delay: 500ms
       - if:
@@ -1422,6 +1433,17 @@ script:
                       id: ble_command_simple
                       ble_device_nr: 2
                       ble_cmd: 0x23
+                      ble_cmd_parm: 0x01
+                  - script.wait: ble_command_simple
+            ### query SSID if empty, wifi connected and FW > 133
+            - if:
+                condition:
+                  - lambda: 'return (id(txt_A11_2).state == "" && id(sensor_device_version_2).state * 100 > 133 && id(bool_wifi_ok_2) );'
+                then:
+                  - script.execute: 
+                      id: ble_command_simple
+                      ble_device_nr: 2
+                      ble_cmd: 0x09
                       ble_cmd_parm: 0x01
                   - script.wait: ble_command_simple
 
@@ -2074,6 +2096,23 @@ script:
               ESP_LOGD("data", "%x \t %i \t %x", b,b,b);
             }
           }
+          else if (x[3] == 0x09) {          
+            ESP_LOGD("main", "Data: Signalstrength/SSID");
+            int data_len = x.size();
+            unsigned int vSignal;
+            unsigned char vSSID[32];
+
+            vSignal = int(x[4]);
+
+            for (int i=6;i<data_len;i++) {
+              vSSID[i-6] = char(x[i]);
+            }
+            vSSID[data_len-6] = 0x00;
+            ESP_LOGI("Signal/SSID", "%i: %s", vSignal,vSSID);
+            std::string sSSID(reinterpret_cast<char*>(vSSID));
+            if (ble_device_nr==1) { id(txt_A11_1).publish_state(sSSID); }
+            if (ble_device_nr==2) { id(txt_A11_2).publish_state(sSSID); }
+          }          
           else if (x[3] == 0x23) {          
             ESP_LOGD("main", "Data: fc41d FW ");            
             int data_len = x.size();
