@@ -75,17 +75,20 @@ time:
       # Every 10 seconds
       - seconds: 0,10,20,30,40,50
         then:
+          - script.stop: ble_process
           - script.execute: ble_process
           - script.wait: ble_process
       # Every 10 seconds
       - seconds: 5,15,25,35,45,55
         then:
+          - script.stop: ble_process_cmd0F
           - script.execute: ble_process_cmd0F
           - script.wait: ble_process_cmd0F
       # Every minute ( or hour if minutes enabled )
-      - seconds: 2
+      - seconds: 3
         #minutes: 1
         then:
+          - script.stop: ble_process_cmd30
           - script.execute: ble_process_cmd30
           - script.wait: ble_process_cmd30
 
@@ -1418,86 +1421,99 @@ script:
           condition:
             - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized));'
           then:
-            - script.execute: 
-                id: ble_runtime_query
-                ble_device_nr: 1
-            - script.wait: ble_runtime_query
-            ### query deviceinfo if empty
+              ### query runtimeInfo only if deviceInfo is available
             - if:
                 condition:
-                  - lambda: 'return (id(txt_A03_1).state == "");'
+                  - lambda: 'return (id(txt_A03_1).state != "");'
                 then:
                   - script.execute: 
-                      id: ble_command_simple
+                      id: ble_runtime_query
                       ble_device_nr: 1
-                      ble_cmd: 0x04
-                      ble_cmd_parm: 0x01
-                  - script.wait: ble_command_simple
-            ### query FC41D_FW if empty and FW > 133
-            - if:
-                condition:
-                  - lambda: 'return (id(txt_A12_1).state == "" && id(sensor_device_version_1).state * 100 > 133 );'
-                then:
-                  - script.execute: 
-                      id: ble_command_simple
-                      ble_device_nr: 1
-                      ble_cmd: 0x23
-                      ble_cmd_parm: 0x01
-                  - script.wait: ble_command_simple
-            ### query SSID if empty, wifi connected and FW > 133
-            - if:
-                condition:
-                  - lambda: 'return (id(txt_A11_1).state == "" && id(sensor_device_version_1).state * 100 > 133 && id(bool_wifi_ok_1) );'
-                then:
-                  - script.execute: 
-                      id: ble_command_simple
-                      ble_device_nr: 1
-                      ble_cmd: 0x09
-                      ble_cmd_parm: 0x01
-                  - script.wait: ble_command_simple
-                    
-      - delay: 500ms
+                  - script.wait: ble_runtime_query
+
+                  ### query FC41D_FW if empty and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A12_1).state == "" && id(sensor_device_version_1).state * 100 > 133 );'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 1
+                            ble_cmd: 0x23
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+                    ### query SSID if empty, wifi connected and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A11_1).state == "" && id(sensor_device_version_1).state * 100 > 133 && id(bool_wifi_ok_1) );'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 1
+                            ble_cmd: 0x09
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+
+                else:
+                  ### query deviceinfo if empty
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A03_1).state == "");'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 1
+                            ble_cmd: 0x04
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+      - delay: 250ms
       - if:
           condition:
             - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized));'
           then:
-            - script.execute: 
-                id: ble_runtime_query
-                ble_device_nr: 2
-            - script.wait: ble_runtime_query
-            ### query deviceinfo if empty
+              ### query runtimeInfo only if deviceInfo is available
             - if:
                 condition:
-                  - lambda: 'return (id(txt_A03_2).state == "");'
+                  - lambda: 'return (id(txt_A03_2).state != "");'
                 then:
                   - script.execute: 
-                      id: ble_command_simple
+                      id: ble_runtime_query
                       ble_device_nr: 2
-                      ble_cmd: 0x04
-                      ble_cmd_parm: 0x01
-                  - script.wait: ble_command_simple            
-            ### query FC41D_FW if empty and FW > 133
-            - if:
-                condition:
-                  - lambda: 'return (id(txt_A12_2).state == "" && id(sensor_device_version_2).state * 100 > 133 );'
-                then:
-                  - script.execute: 
-                      id: ble_command_simple
-                      ble_device_nr: 2
-                      ble_cmd: 0x23
-                      ble_cmd_parm: 0x01
-                  - script.wait: ble_command_simple
-            ### query SSID if empty, wifi connected and FW > 133
-            - if:
-                condition:
-                  - lambda: 'return (id(txt_A11_2).state == "" && id(sensor_device_version_2).state * 100 > 133 && id(bool_wifi_ok_2) );'
-                then:
-                  - script.execute: 
-                      id: ble_command_simple
-                      ble_device_nr: 2
-                      ble_cmd: 0x09
-                      ble_cmd_parm: 0x01
-                  - script.wait: ble_command_simple
+                  - script.wait: ble_runtime_query
+                  ### query FC41D_FW if empty and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A12_2).state == "" && id(sensor_device_version_2).state * 100 > 133);'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 2
+                            ble_cmd: 0x23
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+                  ### query SSID if empty, wifi connected and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A11_2).state == "" && id(sensor_device_version_2).state * 100 > 133 && id(bool_wifi_ok_2));'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 2
+                            ble_cmd: 0x09
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+                else:
+                  ### query deviceinfo if empty
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A03_2).state == "");'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 2
+                            ble_cmd: 0x04
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple                  
 
   - id: ble_process_cmd0F
     then:
@@ -1514,7 +1530,7 @@ script:
                       id: ble_runtime_query0F
                       ble_device_nr: 1
                   - script.wait: ble_runtime_query0F
-      - delay: 500ms
+      - delay: 250ms
       - if:
           condition:
             - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd0F).state);'
@@ -1544,7 +1560,7 @@ script:
                       id: ble_runtime_query30
                       ble_device_nr: 1
                   - script.wait: ble_runtime_query30
-      - delay: 500ms
+      - delay: 250ms
       - if:
           condition:
             - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd30).state);'
@@ -1684,7 +1700,7 @@ script:
       x: char[]
     then:
       - logger.log: 
-          format: "runtime parse: %i"
+          format: "runtime parse test: %i"
           args: [ 'ble_device_nr' ]
       - lambda: |-
           //if (id(internal_console_dbg)) {
