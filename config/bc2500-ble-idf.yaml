@@ -154,6 +154,30 @@ ble_client:
         - globals.set:
             id: ble_1_initialized
             value: '0'
+        - text.set:
+            id: txt_A01_1
+            value: "not connected"
+        - text.set:
+            id: txt_A02_1
+            value: ""
+        - text.set:
+            id: txt_A03_1
+            value: ""
+        - text.set:
+            id: txt_A11_1
+            value: ""
+        - text.set:
+            id: txt_A12_1
+            value: ""
+        - text.set:
+            id: txt_scene_1
+            value: ""
+        - text.set:
+            id: txt_region_1
+            value: ""
+        - sensor.template.publish:
+            id: sensor_device_version_1
+            state: 0
 
   - mac_address: !secret hm2500_2_mac
     id: bc2500_2
@@ -188,6 +212,30 @@ ble_client:
         - globals.set:
             id: ble_2_initialized
             value: '0'
+        - text.set:
+            id: txt_A01_2
+            value: "not connected"
+        - text.set:
+            id: txt_A02_2
+            value: ""
+        - text.set:
+            id: txt_A03_2
+            value: ""
+        - text.set:
+            id: txt_A11_2
+            value: ""
+        - text.set:
+            id: txt_A12_2
+            value: ""
+        - text.set:
+            id: txt_scene_2
+            value: ""
+        - text.set:
+            id: txt_region_2
+            value: ""
+        - sensor.template.publish:
+            id: sensor_device_version_2
+            state: 0
 
 button:
   - platform: restart
@@ -520,14 +568,14 @@ text:
     max_length: 30
     mode: text
   - platform: template
-    name: "A1-t04 - SSID"
+    name: "A1-t11 - SSID"
     id: txt_A11_1
     state_topic: b2500/1/device/wifi_ssid
     optimistic: true
     max_length: 30
     mode: text
   - platform: template
-    name: "A1-t10 - FC41D-FW"
+    name: "A1-t12 - FC41D-FW"
     id: txt_A12_1
     state_topic: b2500/1/device/fc41d_fw
     optimistic: true
@@ -557,14 +605,14 @@ text:
     max_length: 30
     mode: text
   - platform: template
-    name: "A2-t04 - SSID"
+    name: "A2-t11 - SSID"
     id: txt_A11_2
     state_topic: b2500/2/device/wifi_ssid
     optimistic: true
     max_length: 30
     mode: text
   - platform: template
-    name: "A2-t10 - FC41D-FW"
+    name: "A2-t12 - FC41D-FW"
     id: txt_A12_2
     state_topic: b2500/2/device/fc41d_fw
     optimistic: true
@@ -1456,7 +1504,7 @@ script:
             ### query cmd0F if firmware > 1.30
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130);'
+                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130 && id(txt_A02_1).state != "");'
                 then:
                   - script.execute: 
                       id: ble_runtime_query0F
@@ -1470,7 +1518,7 @@ script:
             ### query cmd0F if firmware > 1.30
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130);'
+                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130 && id(txt_A02_2).state != "");'
                 then:
                   - script.execute: 
                       id: ble_runtime_query0F
@@ -1486,7 +1534,7 @@ script:
             ### query cmd30 if firmware > 1.30
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130);'
+                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130 && id(txt_A02_1).state != "");'
                 then:
                   - script.execute: 
                       id: ble_runtime_query30
@@ -1500,7 +1548,7 @@ script:
             ### query cmd30 if firmware > 1.30
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130);'
+                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130 && id(txt_A02_2).state != "");'
                 then:
                   - script.execute: 
                       id: ble_runtime_query30
