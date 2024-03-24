@@ -977,34 +977,34 @@ sensor:
         - script.execute: power_zero
 
 ###test
-  - platform: ble_client
-    ble_client_id: bc2500_1
-    internal: True
-    type: characteristic
-    name: "infoX6a"
-    id: infoX6a
-    service_uuid: 'ff00'
-    characteristic_uuid: 'ff06'
-    notify: True
-    lambda: |-
-      std::vector<char> tData;
-      for (auto b : x) { tData.push_back(b); }
-      id(ble_notify_parse_test).execute(1,tData);
-      return (float)x[0];
-  - platform: ble_client
-    ble_client_id: bc2500_2
-    internal: True
-    type: characteristic
-    name: "infoX6b"
-    id: infoX6b
-    service_uuid: 'ff00'
-    characteristic_uuid: 'ff06'
-    notify: True
-    lambda: |-
-      std::vector<char> tData;
-      for (auto b : x) { tData.push_back(b); }
-      id(ble_notify_parse_test).execute(1,tData);
-      return (float)x[0];
+#  - platform: ble_client
+#    ble_client_id: bc2500_1
+#    internal: True
+#    type: characteristic
+#    name: "infoX6a"
+#    id: infoX6a
+#    service_uuid: 'ff00'
+#    characteristic_uuid: 'ff06'
+#    notify: True
+#    lambda: |-
+#      std::vector<char> tData;
+#      for (auto b : x) { tData.push_back(b); }
+#      id(ble_notify_parse_test).execute(1,tData);
+#      return (float)x[0];
+#  - platform: ble_client
+#    ble_client_id: bc2500_2
+#    internal: True
+#    type: characteristic
+#    name: "infoX6b"
+#    id: infoX6b
+#    service_uuid: 'ff00'
+#    characteristic_uuid: 'ff06'
+#    notify: True
+#    lambda: |-
+#      std::vector<char> tData;
+#      for (auto b : x) { tData.push_back(b); }
+#      id(ble_notify_parse_test).execute(1,tData);
+#      return (float)x[0];
 
 script:
 
@@ -1038,9 +1038,9 @@ script:
 #         = 0x01  Debug ?!?! ( BLE-Serial ) 1Byte   (0x00 = off / 0x01 = on) - enables QBLEGATTSNOTIFY notify 1 / 81 ( entspricht ~ runtimeinfo )
 #         = 0x14  not for mqtt ... set localtime ??? for auth/certs/challenge requests ????? ( query/set wifi depends ????)
 #
-#         new 1.32
-#         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - temp1_temp2_14-cell-voltage(s)
-#         = 0x30 found in logs ... unknown parm 0x01 ???? answers since fw 131
+#         new 1.31
+#         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - soc_temp1_temp2_14-cell-voltage(s)
+#         = 0x30 found in logs ...      ( 0x01 ) - ???? unknown answers since fw 131
 #
 #         new 1.34
 #         = 0x09  SSID / SignalStrength ( 0x01 )
