@@ -50,8 +50,8 @@ wifi:
 
 web_server:
   port: 80
-  local: true
-  js_include: "./v2/www.js"
+  ota: false
+  js_include: "./v3/www.js"
   js_url: ""
   version: 2
 
