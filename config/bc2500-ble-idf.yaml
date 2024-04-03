@@ -303,7 +303,7 @@ number:
     command_topic: b2500/1/battery/discharge_treshold/set
     optimistic: True
     min_value: 0
-    max_value: 900
+    max_value: 999
     step: 1
     restore_value: True
     on_value:
@@ -336,7 +336,7 @@ number:
     command_topic: b2500/2/battery/discharge_treshold/set
     optimistic: True
     min_value: 0
-    max_value: 900
+    max_value: 999
     step: 1
     restore_value: True
     on_value:
@@ -1022,7 +1022,7 @@ script:
 #         = 0x03  runtimeInfo     1Byte   (0x01)
 #         = 0x04  DeviceInfo      1Byte   (0x01)
 #         = 0x0B  DOD             1Byte   (0-100)
-#         = 0x0C  Entladeschwelle 2Byte   (0-900)
+#         = 0x0C  Entladeschwelle 2Byte   (0-999)
 #         = 0x0D  PV2-Passthrough 1Byte   (0x00 on / 0x01 off)
 #         = 0x0E  PowerOut        1Byte   (0x00 1-2 off / 0x01 1 on / 0x02 2 on / 0x03 1-2 on)
 #
@@ -1686,7 +1686,7 @@ script:
           args: [ 'discharge' ]
       - if:
           condition:
-            lambda: 'return ( discharge <= 900 && discharge >= 0);'
+            lambda: 'return ( discharge <= 999 && discharge >= 0);'
           then:
             - script.execute: 
                 id: ble_command_simple
@@ -2239,7 +2239,7 @@ script:
             int ptu_min_value =     5;
             int ptu_max_value =     id(mqtt_opendtu_limit_max).state; // 50; // <- nax rel value -> id(npw2500_zeropower_max_powerlimit_rel).state;
             int ptu_limit =         0;
-            int ptu_max_power =     900; // max:2 (x:4*2 for 4port using 2port)
+            int ptu_max_power =     600; // max:2 (x:4*2 for 4port using 2port)
             int grid_to_ptu_ratio = ptu_max_power/100;
             int grid_min_value =    20;
             static int ptu_old_limit = 0;
