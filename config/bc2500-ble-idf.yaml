@@ -27,8 +27,24 @@ esp32:
 # Enable logging
 logger:
   level: INFO
-#  level: DEBUG
-#  baud_rate: 0
+  on_message:
+    then:
+      lambda: |-
+        if (strstr(message, "BT_BTC") != NULL) {
+          id(mqtt_client).publish("b2500/debug","B_T_C FOUND: restart ESP32");
+          id(controller_restart).press();
+        }
+        if (strstr(message, "mode: single") != NULL) {
+          id(mqtt_client).publish("b2500/debug","single mode: restart ESP32");
+          id(controller_restart).press();
+        }
+        if (strstr(message, "handle") != NULL) {
+          id(mqtt_client).publish("b2500/debug","handle error: do nothing :)");
+          //id(ble_restart).execute();
+          //id(controller_restart).press();
+          //id(btn_device_1_reboot).press();
+          //id(btn_device_2_reboot).press();
+        }
 
 ota:
   password: !secret ota_password
