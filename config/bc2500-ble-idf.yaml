@@ -286,6 +286,30 @@ button:
         - script.wait: ble_command_simple
 
 #  - platform: template
+#    id: test_1_set_wifi_fake
+#    name: "Test: 1 - Set Wifi - fake"
+#    on_press:
+#      then:
+#        - script.execute:
+#            id: ble_command_string
+#            ble_device_nr: 1
+#            ble_cmd: 0x05
+#            ble_cmd_parm: "hellow<.,.>12345678"
+#        - script.wait: ble_command_string
+#
+#  - platform: template
+#    id: test_2_set_wifi_fake
+#    name: "Test: 2 - Set Wifi - fake"
+#    on_press:
+#      then:
+#        - script.execute:
+#            id: ble_command_string
+#            ble_device_nr: 2
+#            ble_cmd: 0x05
+#            ble_cmd_parm: "hellow<.,.>12345678"
+#        - script.wait: ble_command_string
+
+#  - platform: template
 #    id: btn_device_1_factory_settings
 #    name: "D1-63: Factory Settings"
 #    disabled_by_default: True
