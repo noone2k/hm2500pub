@@ -334,7 +334,24 @@ button:
 #            ble_cmd: 0x26
 #            ble_cmd_parm: 0x01
 #        - script.wait: ble_command_simple
-      
+
+#  - platform: template
+#    id: test_1_set_mqtt
+#    command_topic: b2500/1/test/mqtt/set
+#    name: "Test: 1 - Set MQTT - local"
+#    on_press:
+#      then:
+#        - script.execute:
+#            id: ble_command_string
+#            ble_device_nr: 1
+#            ble_cmd: 0x20
+#            ble_cmd_parm: "0<.,.>192.168.XX.XXX<.,.>1883<.,.>noone<.,.>noone<.,.>"
+#            #              0|1 = security off/on
+#            #                    HOST               PORT     USER      PASSWD
+#        - script.wait: ble_command_string
+          
+
+
 number:
   - platform: template
     name: "D1-52: Entladeschwelle"
