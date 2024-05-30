@@ -1,0 +1,2762 @@
+esphome:
+  name: b2500-v2-ble-idf
+  friendly_name: b2500-v2-ble-idf
+    #  platformio_options:
+    #board_build.f_cpu: 160000000L
+  on_boot:
+    priority: -100
+    then:
+      #- switch.turn_off: switch_opendtu_limit
+      - switch.turn_off: switch_enhanced_dod
+      - switch.turn_on: switch_enhanced_cmd0F
+      #- switch.turn_off: switch_enhanced_cmd30
+      #- switch.turn_off: switch_powerout_1_1
+      #- switch.turn_off: switch_powerout_1_2
+      #- switch.turn_off: switch_powerout_2_1
+      #- switch.turn_off: switch_powerout_2_2
+      #- switch.turn_off: switch_pv2_passthrough_1
+      #- switch.turn_off: switch_pv2_passthrough_2
+
+esp32:
+  board: az-delivery-devkit-v4
+  #board: esp32dev
+  framework:
+    #platform_version: 6.6.0
+    #version: 5.2.1
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_FREERTOS_UNICORE: y
+    advanced:
+      ignore_efuse_mac_crc: true
+
+# Enable logging
+logger:
+  level: INFO
+  on_message:
+    level: WARN
+    then:
+      lambda: |-
+        if (strstr(message, "btc_transfer_context") != NULL) {
+          id(mqtt_client).publish("b2500v2/debug","B_T_C FOUND: restart ESP32");
+          id(controller_restart).press();
+        }
+        if (strstr(message, "mode: single") != NULL) {
+          id(mqtt_client).publish("b2500v2/debug","single mode: restart ESP32");
+          id(controller_restart).press();
+        }
+        if (strstr(message, "handle") != NULL) {
+          id(internal_error_count)++;
+          char mvalue[48];
+          snprintf(mvalue, 48,"handle error counter: %i",id(internal_error_count));
+          id(mqtt_client).publish("b2500v2/debug",mvalue);
+          if(id(internal_error_count) > 8) {
+            id(internal_error_count) = 0;
+            id(mqtt_client).publish("b2500v2/debug","handle error counter: RESET");
+            id(controller_restart).press();
+          }
+          //id(ble_restart).execute();
+          //id(controller_restart).press();
+          //id(btn_device_1_reboot).press();
+          //id(btn_device_2_reboot).press();
+        }
+
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  reboot_timeout: 0s
+  fast_connect: True
+  on_connect:
+    - esp32_ble_tracker.start_scan:
+        continuous: true
+  on_disconnect:
+    - esp32_ble_tracker.stop_scan:
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  #ap:
+  #  ssid: "Bc2500-Ble Fallback Hotspot"
+
+#web_server:
+#  port: 80
+  #ota: false
+  #js_include: "./v3/www.js"
+#  js_include: "./v2/www.js"
+#  local: true
+#  js_url: ""
+#  version: 2
+
+#captive_portal:
+
+mqtt:
+  id: mqtt_client
+  broker: !secret mqtt_broker
+  port: !secret mqtt_port
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  discovery: False
+  reboot_timeout: 0s
+  topic_prefix: b2500v2
+  log_topic: b2500v2/debug
+
+interval:
+  - interval: 5s
+    startup_delay: 20s
+    then:
+      - script.execute: ble_process
+      - delay: 1500ms
+      #- script.execute: ble_process_cmd0F
+      - script.execute:
+          id: ble_runtime_query0F
+          ble_device_nr: 1
+      #
+      - delay: 1500ms
+      #- script.execute: ble_process_cmd13
+      #
+      - script.execute:
+          id: ble_runtime_query13
+          ble_device_nr: 1
+
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+#    on_time:
+#      # Every 10 seconds
+#      - seconds: 0,10,20,30,40,50
+#        then:
+#          - script.stop: ble_process
+#          - script.execute: ble_process
+#          - script.wait: ble_process
+#      # Every 10 seconds
+#      - seconds: 5,15,25,35,45,55
+#        then:
+#          - script.stop: ble_process_cmd0F
+#          - script.execute: ble_process_cmd0F
+#          - script.wait: ble_process_cmd0F
+#      # Every minute ( or hour if minutes enabled )
+#      - seconds: 3
+#        #minutes: 1
+#        then:
+#          - script.stop: ble_process_cmd30
+#          - script.execute: ble_process_cmd30
+#          - script.wait: ble_process_cmd30
+
+globals:
+  - id: ble_1_connected
+    type: bool
+    initial_value: '0'
+  - id: ble_1_initialized
+    type: bool
+    initial_value: '1'
+  - id: ble_2_connected
+    type: bool
+    initial_value: '0'
+  - id: ble_2_initialized
+    type: bool
+    initial_value: '1'
+  - id: internal_console_dbg
+    type: bool
+    initial_value: '0'
+  - id: internal_console_hexdump
+    type: bool
+    initial_value: '1'
+  - id: internal_error_count
+    type: int
+    initial_value: '0'
+
+  - id: tmp_timers
+    type: char[22]
+    initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
+
+esp32_ble:
+  id: ble
+
+esp32_ble_tracker:
+  scan_parameters:
+    window: 300ms
+    continuous: false
+
+ble_client:
+  - mac_address: !secret hm2500_3_mac
+    id: bc2500_1
+    on_connect:
+      then:
+        - globals.set:
+            id: ble_1_connected
+            value: '1'
+        - binary_sensor.template.publish:
+            id: bool_ble_ok_1
+            state: ON
+        - text.set:
+            id: txt_A01_1
+            value: "not connected"
+        - text.set:
+            id: txt_A02_1
+            value: ""
+        - text.set:
+            id: txt_A03_1
+            value: ""
+        - text.set:
+            id: txt_A11_1
+            value: ""
+        - text.set:
+            id: txt_A12_1
+            value: ""
+        - text.set:
+            id: txt_scene_1
+            value: ""
+        - text.set:
+            id: txt_region_1
+            value: ""
+              
+# set region
+#        - script.execute: 
+#            id: ble_command_simple
+#            ble_device_nr: 1
+#            ble_cmd: 0x02
+#            ble_cmd_parm: 0x00
+#        - script.wait: ble_command_simple
+#        - delay: 250ms
+    on_disconnect:
+      then:
+        - binary_sensor.template.publish:
+            id: bool_ble_ok_1
+            state: OFF
+        - globals.set:
+            id: ble_1_connected
+            value: '0'
+        - globals.set:
+            id: ble_1_initialized
+            value: '1'
+        - text.set:
+            id: txt_A01_1
+            value: "not connected"
+        - text.set:
+            id: txt_A02_1
+            value: ""
+        - text.set:
+            id: txt_A03_1
+            value: ""
+        - text.set:
+            id: txt_A11_1
+            value: ""
+        - text.set:
+            id: txt_A12_1
+            value: ""
+        - text.set:
+            id: txt_scene_1
+            value: ""
+        - text.set:
+            id: txt_region_1
+            value: ""
+        - sensor.template.publish:
+            id: sensor_device_version_1
+            state: 0
+
+  - mac_address: !secret hm2500_4_mac
+    id: bc2500_2
+    on_connect:
+      then:
+        - globals.set:
+            id: ble_2_connected
+            value: '1'
+        - binary_sensor.template.publish:
+            id: bool_ble_ok_2
+            state: ON
+        - text.set:
+            id: txt_A01_2
+            value: "not connected"
+        - text.set:
+            id: txt_A02_2
+            value: ""
+        - text.set:
+            id: txt_A03_2
+            value: ""
+        - text.set:
+            id: txt_A11_2
+            value: ""
+        - text.set:
+            id: txt_A12_2
+            value: ""
+        - text.set:
+            id: txt_scene_2
+            value: ""
+        - text.set:
+            id: txt_region_2
+            value: ""
+
+              # set region      
+#        - script.execute: 
+#            id: ble_command_simple
+#            ble_device_nr: 2
+#            ble_cmd: 0x02
+#            ble_cmd_parm: 0x00
+#        - script.wait: ble_command_simple
+#        - delay: 250ms
+#        - script.execute: 
+#            id: ble_set_time
+#            ble_device_nr: 2
+#        - script.wait: ble_set_time
+    on_disconnect:
+      then:
+        - binary_sensor.template.publish:
+            id: bool_ble_ok_2
+            state: OFF
+        - globals.set:
+            id: ble_2_connected
+            value: '0'
+        - globals.set:
+            id: ble_2_initialized
+            value: '1'
+        - text.set:
+            id: txt_A01_2
+            value: "not connected"
+        - text.set:
+            id: txt_A02_2
+            value: ""
+        - text.set:
+            id: txt_A03_2
+            value: ""
+        - text.set:
+            id: txt_A11_2
+            value: ""
+        - text.set:
+            id: txt_A12_2
+            value: ""
+        - text.set:
+            id: txt_scene_2
+            value: ""
+        - text.set:
+            id: txt_region_2
+            value: ""
+        - sensor.template.publish:
+            id: sensor_device_version_2
+            state: 0
+
+button:
+  - platform: restart
+    id: controller_restart
+    name: "Restart Controller"
+    command_topic: b2500v2/esp32/reboot/set
+
+  - platform: template
+    id: btn_device_1_reboot
+    name: "D1-60: Reboot B2500"
+    command_topic: b2500v2/1/device/device_reboot/set
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x25
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: btn_device_2_reboot
+    name: "D2-60: Reboot B2500"
+    command_topic: b2500v2/2/device/device_reboot/set
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 2
+            ble_cmd: 0x25
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: btn_device_1_factory_settings
+    name: "D1-63: Factory Settings"
+    command_topic: b2500v2/1/device/factory_settings/set
+    disabled_by_default: True
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x26
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: btn_device_2_factory_settings
+    name: "D2-63: Factory Settings"
+    command_topic: b2500v2/2/device/factory_settings/set
+    disabled_by_default: True
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 2
+            ble_cmd: 0x26
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: test_1_cmd30
+    name: "Test: 1 - CMD30"
+    on_press:
+      then:
+        - script.stop: ble_runtime_query30
+        - script.execute: 
+            id: ble_runtime_query30
+            ble_device_nr: 1
+        - script.wait: ble_runtime_query30
+
+  - platform: template
+    id: test_1_ssid_signal 
+    name: "Test: 1 - get SSID / Signal"
+    on_press:
+      then:
+        - script.execute:  
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x09 
+            ble_cmd_parm: 0x01 
+        - script.wait: ble_command_simple
+          
+  - platform: template
+    id: test_1_set_wifi1
+    name: "Test: 1 - Set Wifi - guest"
+    on_press:
+      then:
+        - script.execute:
+            id: ble_command_string
+            ble_device_nr: 1
+            ble_cmd: 0x05
+            ble_cmd_parm: "internaltest<.,.>lassmichrein"
+        - script.wait: ble_command_string
+
+  - platform: template
+    id: test_1_fc41d_qblenotify
+    command_topic: b2500v2/1/test/notify/set
+    name: "Test: 1 - FC41D enable QBLENOTIFY - ON"
+    on_press:
+      then:
+        - script.execute:
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x01
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+          
+  - platform: template
+    id: test_2_fc41d_qblenotify
+    name: "Test: 2 - FC41D enable QBLENOTIFY - ON"
+    on_press:
+      then:
+        - script.execute: 
+            id: ble_command_simple
+            ble_device_nr: 2
+            ble_cmd: 0x01
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: test_2_cmd1e
+    name: "Test: 2 - CMD1E"
+    on_press:
+      then:
+        - script.execute:
+            id: ble_command_simple
+            ble_device_nr: 2
+            ble_cmd: 0x1e
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+  - platform: template
+    id: test_1_set_mqtt
+    command_topic: b2500v2/1/test/mqtt/set
+    name: "Test: 1 - Set MQTT - local"
+    on_press:
+      then:
+        - script.execute:
+            id: ble_command_string
+            ble_device_nr: 1
+            ble_cmd: 0x20
+            #ble_cmd_parm: "0<.,.>192.168.10.125<.,.>1883<.,.>2000<.,.>3000<.,.>"
+            #ble_cmd_parm: "0<.,.>192.168.10.125<.,.>1883<.,.>123<.,.>"
+            ble_cmd_parm: "0<.,.>192.168.10.125<.,.>1883<.,.>noone<.,.>noone<.,.>"
+        - script.wait: ble_command_string
+
+  - platform: template
+    id: test_1_cmd11
+    command_topic: b2500v2/1/test/cmd11/set
+    name: "Test: 1 - CMD11"
+    on_press:
+      then:
+        - script.execute:
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x11
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+          
+  - platform: template
+    id: test_1_cmde1
+    command_topic: b2500v2/1/test/cmd1e/set
+    name: "Test: 1 - CMD1e"
+    on_press:
+      then:
+        - script.execute:
+            id: ble_command_simple
+            ble_device_nr: 1
+            ble_cmd: 0x1e
+            ble_cmd_parm: 0x01
+        - script.wait: ble_command_simple
+
+number:
+  - platform: template
+    name: "D1-53: DOD"
+    state_topic: b2500v2/1/battery/dod
+    command_topic: b2500v2/1/battery/dod/set
+    id: sensor_dod_1
+    optimistic: True
+    min_value: 10
+    max_value: 100
+    step: 1
+    restore_value: True
+    on_value:
+      - script.execute:
+          id: ble_set_dod
+          ble_device_nr: 1
+          dod: !lambda return x;
+
+  - platform: template
+    id: sensor_timer3_output
+    name: "D1-55: Timer 3 Output Power"
+    state_topic: b2500v2/1/timer/3/power
+    command_topic: b2500v2/1/timer/3/power/set
+    optimistic: True
+    min_value: 50
+    max_value: 400
+    step: 1
+    restore_value: True
+    on_value:
+      - script.execute:
+          id: ble_set_output_power
+          ble_device_nr: 1
+          timer: 3
+          power: !lambda return x; 
+
+
+  - platform: template
+    name: "D2-53: DOD"
+    state_topic: b2500v2/2/battery/dod
+    command_topic: b2500v2/2/battery/dod/set
+    id: sensor_dod_2
+    optimistic: True
+    min_value: 10
+    max_value: 100
+    step: 1
+    restore_value: True
+    on_value:
+      - script.execute:
+          id: ble_set_dod
+          ble_device_nr: 2
+          dod: !lambda return x;
+
+
+  ### power zero
+  - platform: template
+    name: "MQTT: opendtu set limit"
+    id: mqtt_opendtu_limit
+    internal: False
+    state_topic: !secret mqtt_opendtu_limit_cmd
+    command_topic: !secret mqtt_opendtu_limit_state
+    optimistic: True
+    min_value: 1
+    max_value: 100
+    step: 1
+    restore_value: True
+
+  - platform: template
+    name: "MQTT: opendtu set limit max"
+    id: mqtt_opendtu_limit_max
+    state_topic: b2500v2/npw/max_limit
+    command_topic: b2500v2/npw/max_limit/set
+    internal: False
+    optimistic: True
+    min_value: 1
+    max_value: 100
+    step: 1
+    restore_value: True
+
+switch:
+  - platform: ble_client
+    ble_client_id: bc2500_1
+    id: bc2500_1_state
+    name: "D1-90: Bluetooth"
+    state_topic: b2500v2/1/bluetooth/enabled
+    command_topic: b2500v2/1/bluetooth/enabled/set
+
+  - platform: ble_client
+    ble_client_id: bc2500_2
+    id: bc2500_2_state
+    name: "D2-90: Bluetooth"
+    state_topic: b2500v2/2/bluetooth/enabled
+    command_topic: b2500v2/2/bluetooth/enabled/set 
+
+  - platform: template
+    id: switch_timer1_enable
+    name: "D1-01-1: Timer1"
+    state_topic: b2500v2/1/timer/1/enabled
+    command_topic: b2500v2/1/timer/1/enabled/set
+    optimistic: True
+    assumed_state: True
+    on_turn_on:
+      then:
+        - script.execute:
+            id: ble_set_output_enable
+            ble_device_nr: 1
+            timer: 1
+            enable: 1
+    on_turn_off:
+      then:
+        - script.execute:
+            id: ble_set_output_enable
+            ble_device_nr: 1
+            timer: 1
+            enable: 0
+
+  - platform: template
+    id: switch_timer2_enable
+    name: "D1-01-2: Timer2"
+    state_topic: b2500v2/1/timer/2/enabled
+    command_topic: b2500v2/1/timer/2/enabled/set
+    optimistic: True
+    assumed_state: True
+    on_turn_on:
+      then:
+        - script.execute:
+            id: ble_set_output_enable
+            ble_device_nr: 1
+            timer: 2
+            enable: 1
+    on_turn_off:
+      then:
+        - script.execute:
+            id: ble_set_output_enable
+            ble_device_nr: 1
+            timer: 2
+            enable: 0
+
+
+  - platform: template
+    id: switch_timer3_enable
+    name: "D1-01-3: Timer3"
+    state_topic: b2500v2/1/timer/3/enabled
+    command_topic: b2500v2/1/timer/3/enabled/set
+    optimistic: True
+    assumed_state: True
+    on_turn_on:
+      then:
+        - script.execute:
+            id: ble_set_output_enable
+            ble_device_nr: 1
+            timer: 3
+            enable: 1
+    on_turn_off:
+      then:
+        - script.execute:
+            id: ble_set_output_enable
+            ble_device_nr: 1
+            timer: 3
+            enable: 0
+              
+
+#####################
+
+  - platform: template
+    id: switch_loadfirst_1 
+    name: "D1-03: LoadFirst"
+    state_topic: b2500v2/1/device/loadfirst
+    command_topic: b2500v2/1/device/loadfirst/set
+    optimistic: True
+    assumed_state: True
+    on_turn_on:
+      then:
+        - script.execute:
+            id: ble_set_loadfirst
+            ble_device_nr: 1
+            switch_cmd: 1
+    on_turn_off:
+      then:
+        - script.execute:
+            id: ble_set_loadfirst
+            ble_device_nr: 1
+            switch_cmd: 0
+
+  - platform: template
+    id: switch_loadfirst_2        
+    name: "D2-03: LoadFirst"
+    state_topic: b2500v2/2/device/loadfirst
+    command_topic: b2500v2/2/device/loadfirst/set
+    optimistic: True
+    assumed_state: True
+    on_turn_on:
+      then:
+        - script.execute:
+            id: ble_set_loadfirst
+            ble_device_nr: 2
+            switch_cmd: 1
+    on_turn_off:
+      then:
+        - script.execute:
+            id: ble_set_loadfirst
+            ble_device_nr: 2
+            switch_cmd: 0
+
+
+#  - platform: template
+#    id: switch_simultan_1
+#    name: "D1-03: Simultan"
+#    state_topic: b2500v2/1/device/simultan
+#    command_topic: b2500v2/1/device/simultan/set
+#    optimistic: True
+#    assumed_state: True
+#    on_turn_on:
+#      then:
+#        - script.execute: 
+#            id: ble_set_simultan
+#            ble_device_nr: 1
+#            switch_cmd: 0
+#    on_turn_off:
+#      then:
+#        - script.execute: 
+#            id: ble_set_simultan
+#            ble_device_nr: 1
+#            switch_cmd: 1
+#
+#  - platform: template
+#    id: switch_simultan_2
+#    name: "D2-03: Simultan"
+#    state_topic: b2500v2/2/device/simultan
+#    command_topic: b2500v2/2/device/simultan/set
+#    optimistic: True
+#    assumed_state: True
+#    on_turn_on:
+#      then:
+#        - script.execute:  
+#            id: ble_set_simultan
+#            ble_device_nr: 2
+#            switch_cmd: 0 
+#    on_turn_off:
+#      then:
+#        - script.execute:  
+#            id: ble_set_simultan
+#            ble_device_nr: 2
+#            switch_cmd: 1
+
+
+
+  - platform: template
+    id: switch_debug_hexdump
+    name: "INTERNAL:DEBUG HEXDUMP"
+    optimistic: True
+    command_topic: b2500v2/esp32/internal_hexdump/enabled/set
+    state_topic: b2500v2/esp32/internal_hexdump/enabled
+    #assumed_state: True
+
+#  - platform: template
+#    id: switch_opendtu_limit
+#    name: "MQTT: opendtu - zero power"
+#    optimistic: True
+#    command_topic: b2500v2/npw/enabled/set
+#    state_topic: b2500v2/npw/enabled
+#    #restore_mode: RESTORE_DEFAULT_ON
+#    #assumed_state: True
+
+  - platform: template
+    id: switch_enhanced_dod
+    name: "ENHANCED: Enforce DOD"
+    optimistic: True
+    command_topic: b2500v2/esp32/enforce_dod/enabled/set
+    state_topic: b2500v2/esp32/enforce_dod/enabled
+
+    #restore_mode: RESTORE_DEFAULT_ON
+    #assumed_state: True
+
+  - platform: template
+    id: switch_enhanced_cmd0F
+    name: "ENHANCED: enable Cell Query (cmd0F)"
+    optimistic: True
+    #restore_mode: RESTORE_DEFAULT_ON
+    #assumed_state: True
+
+  - platform: template
+    id: switch_enhanced_cmd13
+    name: "ENHANCED: enable Timer Query (cmd13)"
+    optimistic: True
+    #restore_mode: RESTORE_DEFAULT_ON
+    #assumed_state: True
+
+#  - platform: template
+#    id: switch_enhanced_cmd30
+#    name: "ENHANCED: enable unknown Query (cmd30)"
+#    optimistic: True
+#    #restore_mode: RESTORE_DEFAULT_ON
+#    #assumed_state: True
+
+
+text:
+  - platform: template
+    name: "A1-t01 - Device Type"
+    id: txt_A01_1
+    state_topic: b2500v2/1/device/type
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A1-t02 - Device ID"
+    state_topic: b2500v2/1/device/id
+    id: txt_A02_1
+    optimistic: true
+    max_length: 32
+    mode: text
+  - platform: template
+    name: "A1-t03 - MAC"
+    id: txt_A03_1
+    state_topic: b2500v2/1/device/ble_mac
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A1-t11 - SSID"
+    id: txt_A11_1
+    state_topic: b2500v2/1/device/wifi_ssid
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A1-t12 - FC41D-FW"
+    id: txt_A12_1
+    state_topic: b2500v2/1/device/fc41d_fw
+    optimistic: true
+    max_length: 30
+    mode: text
+
+  - platform: template
+    name: "A2-t01 - Device Type"
+    id: txt_A01_2
+    state_topic: b2500v2/2/device/type
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A2-t02 - Device ID"
+    id: txt_A02_2
+    state_topic: b2500v2/2/device/id
+    optimistic: true
+    max_length: 32
+    mode: text
+  - platform: template
+    name: "A2-t03 - MAC"
+    id: txt_A03_2
+    optimistic: true
+    state_topic: b2500v2/2/device/ble_mac
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A2-t11 - SSID"
+    id: txt_A11_2
+    state_topic: b2500v2/2/device/wifi_ssid
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A2-t12 - FC41D-FW"
+    id: txt_A12_2
+    state_topic: b2500v2/2/device/fc41d_fw
+    optimistic: true
+    max_length: 30
+    mode: text
+
+  - platform: template
+    name: "A1-t56: Szene"
+    id: txt_scene_1
+    state_topic: b2500v2/1/device/scene
+    optimistic: true
+    max_length: 32
+    mode: text
+  - platform: template
+    name: "A1-t57: Region"
+    id: txt_region_1
+    state_topic: b2500v2/1/device/region
+    optimistic: true
+    max_length: 8
+    mode: text
+
+  - platform: template
+    name: "A2-t56: Szene"
+    id: txt_scene_2
+    state_topic: b2500v2/2/device/scene
+    optimistic: true
+    max_length: 32
+    mode: text
+  - platform: template
+    name: "A2-t57: Region"
+    id: txt_region_2
+    state_topic: b2500v2/2/device/region
+    optimistic: true
+    max_length: 8
+    mode: text
+
+  - platform: template
+    name: "A1-t65: Last Response 1"
+    id: txt_last_response_1
+    state_topic: b2500v2/1/device/last_response
+    optimistic: true
+    max_length: 32
+    mode: text
+  - platform: template
+    name: "A2-t65: Last Response 2"
+    id: txt_last_response_2
+    state_topic: b2500v2/2/device/last_response
+    optimistic: true
+    max_length: 32
+    mode: text
+
+  - platform: template
+    name: "A1-t80 - Device Mode"
+    id: txt_A80_1
+    state_topic: b2500v2/1/device/mode
+    optimistic: true
+    max_length: 30
+    mode: text
+  - platform: template
+    name: "A2-t80 - Device Mode"
+    id: txt_A80_2
+    state_topic: b2500v2/2/device/mode
+    optimistic: true
+    max_length: 30
+    mode: text
+
+
+binary_sensor:
+  - platform: template
+    name: "D1-i01: PV 1 - Aktiv"
+    id: bool_pv_active_1_1
+    state_topic: b2500v2/1/pv1/active
+
+  - platform: template
+    name: "D1-i11: PV 2 - Aktiv"
+    id: bool_pv_active_1_2
+    state_topic: b2500v2/1/pv2/active
+
+  - platform: template
+    name: "D1-i02: PV 1 - Transparent"
+    id: bool_pv_transparent_1_1
+    state_topic: b2500v2/1/pv1/transparent
+
+  - platform: template    
+    name: "D1-i11: PV 2 - Transparent"
+    id: bool_pv_transparent_1_2
+    state_topic: b2500v2/1/pv2/transparent
+
+  - platform: template
+    name: "D1-i54: Wifi Connected"
+    id: bool_wifi_ok_1
+    state_topic: b2500v2/1/device/wifi_ok
+
+  - platform: template
+    name: "D1-i55: MQTT Connected"
+    id: bool_mqtt_ok_1
+    state_topic: b2500v2/1/device/mqtt_ok
+
+  - platform: template
+    name: "D1-i57: BLE Connected"
+    id: bool_ble_ok_1
+    state_topic: b2500v2/1/device/ble_ok
+
+  - platform: template
+    name: "D1-i21: Ausgang 1 - Aktiv"
+    id: bool_power_active_1_1
+    state_topic: b2500v2/1/power1/active
+
+  - platform: template
+    name: "D1-i31: Ausgang 2 - Aktiv"
+    id: bool_power_active_1_2
+    state_topic: b2500v2/1/power2/active
+
+  - platform: template
+    name: "D1-i40: Erweiterung 1 - angeschlossen"
+    id: bool_extern_connected_1_1
+    state_topic: b2500v2/1/extern1/connected
+
+  - platform: template
+    name: "D1-i41: Erweiterung 2 - angeschlossen"
+    id: bool_extern_connected_1_2
+    state_topic: b2500v2/1/extern2/connected
+
+
+  - platform: template
+    name: "D2-i01: PV 1 - Aktiv"
+    id: bool_pv_active_2_1
+    state_topic: b2500v2/2/pv1/active
+
+  - platform: template
+    name: "D2-i11: PV 2 - Aktiv"
+    id: bool_pv_active_2_2
+    state_topic: b2500v2/2/pv2/active
+
+  - platform: template
+    name: "D2-i02: PV 1 - Transparent"
+    id: bool_pv_transparent_2_1
+    state_topic: b2500v2/2/pv1/transparent
+
+  - platform: template    
+    name: "D2-i12: PV 2 - Transparent"
+    id: bool_pv_transparent_2_2
+    state_topic: b2500v2/2/pv2/transparent
+
+  - platform: template
+    name: "D2-i54: Wifi Connected"
+    id: bool_wifi_ok_2
+    state_topic: b2500v2/2/device/wifi_ok
+
+  - platform: template
+    name: "D2-i55: MQTT Connected"
+    id: bool_mqtt_ok_2
+    state_topic: b2500v2/2/device/mqtt_ok
+
+  - platform: template
+    name: "D2-i57: BLE Connected"
+    id: bool_ble_ok_2
+    state_topic: b2500v2/2/device/ble_ok
+
+  - platform: template
+    name: "D2-i21: Ausgang 1 - Aktiv"
+    id: bool_power_active_2_1
+    state_topic: b2500v2/2/power1/active
+
+  - platform: template
+    name: "D2-i31: Ausgang 2 - Aktiv"
+    id: bool_power_active_2_2
+    state_topic: b2500v2/2/power2/active
+
+  - platform: template
+    name: "D2-i40: Erweiterung 1 - angeschlossen"
+    id: bool_extern_connected_2_1
+    state_topic: b2500v2/2/extern1/connected
+
+  - platform: template
+    name: "D2-i41: Erweiterung 2 - angeschlossen"
+    id: bool_extern_connected_2_2
+    state_topic: b2500v2/2/extern2/connected
+
+sensor:
+  - platform: uptime
+    name: Uptime Sensor
+    filters:
+      - lambda: return x / 3600.0;
+    unit_of_measurement: "hours"
+    accuracy_decimals: 2
+    state_topic: b2500v2/esp32/uptime
+  
+  - platform: template
+    name: "D1-i05: PV 1 - Leistung"
+    id: sensor_pv_power_in_1_1
+    state_topic: b2500v2/1/pv1/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+      
+  - platform: template
+    name: "D1-i15: PV 2 - Leistung"
+    id: sensor_pv_power_in_1_2
+    state_topic: b2500v2/1/pv2/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+
+  - platform: template
+    name: "D1-i50: Füllstand der Batterie in Prozent"
+    id: sensor_bat_remain_1
+    state_topic: b2500v2/1/battery/remaining_percent
+    accuracy_decimals: 0
+    unit_of_measurement: '%'
+    device_class: battery
+#    on_raw_value:
+#      - then:
+#        - lambda: "id(ble_enforce_dod).execute(1,x);"
+          
+
+  - platform: template
+    name: "D1-i51: Füllstand der Batterie in Wh"
+    id: sensor_bat_capacity_1
+    state_topic: b2500v2/1/battery/remaining_capacity
+    accuracy_decimals: 0
+    unit_of_measurement: Wh
+    device_class: energy
+
+  - platform: template
+    name: "D1-i25: Ausgang 1 - Leistung"
+    id: sensor_power_out_1_1
+    state_topic: b2500v2/1/power1/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: template
+    name: "D1-i35: Ausgang 2 - Leistung"
+    id: sensor_power_out_1_2
+    state_topic: b2500v2/1/power2/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: template
+    name: "A1-t59: Geräte Version"
+    id: sensor_device_version_1
+    state_topic: b2500v2/1/device/fw_version
+    accuracy_decimals: 2
+
+
+  - platform: template
+    name: "D1-i60: Temperatur 1"
+    id: sensor_device_temp1_1
+    state_topic: b2500v2/1/device/temp1
+    accuracy_decimals: 0
+    unit_of_measurement: '°C'
+    device_class: temperature
+
+  - platform: template
+    name: "D1-i61: Temperatur 2"
+    id: sensor_device_temp1_2
+    state_topic: b2500v2/1/device/temp2
+    accuracy_decimals: 0
+    unit_of_measurement: '°C'
+    device_class: temperature
+
+  - platform: template
+    name: "D2-i05: PV 1 - Leistung"
+    id: sensor_pv_power_in_2_1
+    state_topic: b2500v2/2/pv1/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+
+  - platform: template
+    name: "D2-i15: PV 2 - Leistung"
+    id: sensor_pv_power_in_2_2
+    state_topic: b2500v2/2/pv2/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+
+  - platform: template
+    name: "D2-i50: Füllstand der Batterie in Prozent"
+    id: sensor_bat_remain_2
+    state_topic: b2500v2/2/battery/remaining_percent
+    accuracy_decimals: 0
+    unit_of_measurement: '%'
+    device_class: battery      
+#    on_raw_value:
+#      - then:
+#        - lambda: "id(ble_enforce_dod).execute(2,x);"
+
+  - platform: template
+    name: "D2-i51: Füllstand der Batterie in Wh"
+    id: sensor_bat_capacity_2
+    state_topic: b2500v2/2/battery/remaining_capacity
+    accuracy_decimals: 0
+    unit_of_measurement: Wh
+    device_class: energy
+
+  - platform: template
+    name: "D2-i25: Ausgang 1 - Leistung "
+    id: sensor_power_out_2_1
+    state_topic: b2500v2/2/power1/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: template
+    name: "D2-i35: Ausgang 2 - Leistung "
+    id: sensor_power_out_2_2
+    state_topic: b2500v2/2/power2/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: template
+    name: "A2-t59: Geräte Version"
+    id: sensor_device_version_2
+    state_topic: b2500v2/2/device/fw_version
+    accuracy_decimals: 2
+
+  - platform: template
+    name: "D2-i60: Temperatur 1"
+    id: sensor_device_temp2_1
+    state_topic: b2500v2/2/device/temp1
+    accuracy_decimals: 0
+    unit_of_measurement: '°C'
+    device_class: temperature
+
+  - platform: template
+    name: "D2-i61: Temperatur 2"
+    id: sensor_device_temp2_2
+    state_topic: b2500v2/2/device/temp2
+    accuracy_decimals: 0
+    unit_of_measurement: '°C'
+    device_class: temperature
+
+  - platform: template
+    name: "E1-i10: PV - Leistung - 1"
+    id: sensor_pv_power_in_1_S
+    state_topic: b2500v2/1/pv/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+
+  - platform: template
+    name: "E1-i11: PV - Leistung - 2"
+    id: sensor_pv_power_in_2_S
+    state_topic: b2500v2/2/pv/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+
+  - platform: template
+    name: "E1-i12: PV - Leistung - S"
+    id: sensor_pv_power_in_S_S
+    state_topic: b2500v2/S/pv/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+    icon: mdi:solar-power
+
+  - platform: template
+    name: "E2-i20: Ausgang - Leistung - 1"
+    id: sensor_power_out_1_S
+    state_topic: b2500v2/1/power/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: template
+    name: "E2-i21: Ausgang - Leistung - 2"
+    id: sensor_power_out_2_S
+    state_topic: b2500v2/2/power/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: template
+    name: "E2-i21: Ausgang - Leistung - S"
+    id: sensor_power_out_S_S
+    state_topic: b2500v2/S/power/power
+    accuracy_decimals: 0
+    unit_of_measurement: W
+    device_class: power
+
+  - platform: ble_client
+    ble_client_id: bc2500_1
+    internal: True
+    type: characteristic
+    name: "infoX2a"
+    id: infoX2a
+    service_uuid: 'ff00'
+    characteristic_uuid: 'ff02'
+    notify: True
+    lambda: |-
+      std::vector<char> tData;
+      for (auto b : x) { tData.push_back(b); }
+      id(ble_notify_parse).execute(1,tData);
+      return (float)x[0];
+  - platform: ble_client
+    ble_client_id: bc2500_2
+    internal: True
+    type: characteristic
+    name: "infoX2b"
+    id: infoX2b
+    service_uuid: 'ff00'
+    characteristic_uuid: 'ff02'
+    notify: True
+    lambda: |-
+      std::vector<char> tData;
+      for (auto b : x) { tData.push_back(b); }
+      id(ble_notify_parse).execute(2,tData);
+      return (float)x[0];
+
+### power zero - mqtt grid power sensor ( any who publish the grid power to mqtt - defined in secrets,yaml )
+#  - platform: mqtt_subscribe
+#    name: "MQTT: Grid Power"
+#    id: mqtt_grid_power
+#    topic: !secret mqtt_grid_power
+#    on_value:
+#      then:    
+#        - script.execute: power_zero
+
+###test
+  - platform: ble_client
+    ble_client_id: bc2500_1
+    internal: True
+    type: characteristic
+    name: "infoX6a"
+    id: infoX6a
+    service_uuid: 'ff00'
+    characteristic_uuid: 'ff06'
+    notify: True
+    lambda: |-
+      std::vector<char> tData;
+      for (auto b : x) { tData.push_back(b); }
+      id(ble_notify_parse_test).execute(1,tData);
+      return (float)x[0];
+  - platform: ble_client
+    ble_client_id: bc2500_2
+    internal: True
+    type: characteristic
+    name: "infoX6b"
+    id: infoX6b
+    service_uuid: 'ff00'
+    characteristic_uuid: 'ff06'
+    notify: True
+    lambda: |-
+      std::vector<char> tData;
+      for (auto b : x) { tData.push_back(b); }
+      id(ble_notify_parse_test).execute(1,tData);
+      return (float)x[0];
+
+script:
+
+# ble communication
+#
+# NOTE: this is a copy of the V1 Changes ... everthing 'til 1.38 belongs to V1 ... and dont neccessary are included/used in V2-FW 
+#       I started with V1.60 on V2, so some commands maybe included earlier into V2-FW ...
+#
+#
+# action ( 00f1 )
+#
+# head    = 0x73
+# length  = len(paket)
+# cntl    = 0x23
+# cmd     = 0x02  set Region      1Byte   (0x00 = EU / 0x01 = China / 0x02 = Non-EU / 0xff = not SET)
+#         = 0x03  runtimeInfo     1Byte   (0x01)
+#         = 0x04  DeviceInfo      1Byte   (0x01)
+#         = 0x0B  DOD             1Byte   (0-100)
+#         = 0x0C  Entladeschwelle 2Byte   (0-999)
+#         = 0x0D  PV2-Passthrough  1Byte   (0x00 on / 0x01 off)
+#         = 0x0E  PowerOut        1Byte   (0x00 1-2 off / 0x01 1 on / 0x02 2 on / 0x03 1-2 on)
+#
+#         = 0x05  Wifi-Config     xByte   ( ssid<.,.>pwd )
+#         = 0x08  Wifi-State      1Byte   (0x01)  ????
+#
+#         following mqtt parts not implemented - outdated or not implemented in fw <= 1.34
+#         have a look at 0x20/0x21 in 1.34
+#         q&d c&p - more details will be added, maybe ...
+#         = 0x14  set AWS MQTT    xByte   ( url<.,.>Port ) ....
+#         = 0x60  set MQTT Certs  xByte   ( 0x00 = client.key / 0x01 = client.crt / 0x02 = ca.crt + cert len  )
+#         = 0x61  trans MQTT Certs xByte  ( jeweils 128bytes des certs  )
+#         = 0x62  end MQTT Certs  xByte   (   )
+#
+#         testing / notes
+#         = 0x01  Debug ?!?! ( BLE-Serial ) 1Byte   (0x00 = off / 0x01 = on) - enables QBLEGATTSNOTIFY notify 1 / 81 ( entspricht ~ runtimeinfo )
+#         = 0x14  not for mqtt ... set localtime ??? for auth/certs/challenge requests ????? ( query/set wifi depends ????)
+#
+#         new 1.31
+#         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - soc_temp1_temp2_14-cell-voltage(s)
+#         = 0x30 found in logs ...      ( 0x01 ) - ???? unknown answers since fw 131
+#
+#         new 1.34
+#         = 0x09  SSID / SignalStrength ( 0x01 )
+#         = 0x20  mqtt related - set server/port ? - see new in 1.37
+#         = 0x21  mqtt related - set keys ?        
+#         = 0x23  get FC41D Version     ( 0x01 )
+#         = 0x24  undocumented*
+#         = 0x25  Reboot                ( 0x01 )
+#         = 0x26  Factory Settings      ( 0x01 )
+#
+#         new 1.37
+#         = 0x20  set own MQTT
+#                 0|1<.,.>HOST<.,.>PORT<.,.>USER<.,.>PASSWD<.,.>"
+#                 0   = no ssl
+#                 1   = encryption
+#                 note: leaving user/passwd empty works ...
+#
+#         unknown ...
+#         = 0x1e  unknown - error related ?!?!? (0x30)
+#
+#
+#         #### V2 #####
+#         ( see note in top of doc )
+#
+#         new 1.60
+#         = 0x11  ???
+#         = 0x12  set timers
+#         = 0x13  get timers
+#
+#
+# data    = xx xx xx xx xx xx .... / depends on cmd
+# crc     = xor len(paket) - 1 
+#
+#
+# responses ( ff02 ):
+#
+# head    = 0x73
+# length  = len(paket)
+# cntl    = 0x23
+# cmd     = cmd
+# data    = xx xx xx xx xx ....
+#
+#
+#
+################ maybe direct for arm
+# send ( ff01 )
+#
+# head1    = 0xAA
+# head2(?) = 0x55 ( not length ?!?!? )
+# cmd      = 1x / 2x / 3x ( flash - 30 "open"/ 31 - write / 32 "close" ) / 5x
+# data     = xx xx xx xx xx ....
+# crc      = xor len(paket) -1 
+#
+################ maybe direct for bms
+# send/receive ( ff06 ) 
+#
+# head    = 0xAA
+# len     = 0x05/0x03
+# data    = xx xx xxx ( xx xx )
+# crc     = x1 + x2 + ... + xn
+#
+#
+#   f.ex hw-reset 
+#
+#  -> aa 05 01 00 01 01 00 08
+#  <- aa 01 00 01
+#
+#  -> aa 05 01 00 01 00 00 07
+#  <- aa 01 00 01
+#
+
+  - id: ble_command_simple
+    mode: queued
+    parameters:
+      ble_device_nr: int
+      ble_cmd: int
+      ble_cmd_parm: int
+    then:
+      - logger.log:
+          level: INFO
+          format: "ble command send: %i [0x%02X] %i"
+          args: [ 'ble_device_nr','ble_cmd','ble_cmd_parm' ]
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 1);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_1
+                #service_uuid: 'ff00'
+                #characteristic_uuid: 'ff01'
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat1{ 0x73,0x06,0x23,(unsigned char)ble_cmd};
+
+                  if (ble_cmd == 0x0C) {
+                    rdat1.push_back((uint8_t)((ble_cmd_parm >> 0) & 0xFF));
+                    rdat1.push_back((uint8_t)((ble_cmd_parm >> 8) & 0xFF));
+                  } else {
+                    rdat1.push_back((unsigned char)ble_cmd_parm);
+                  }
+
+                  int rlen = rdat1.size();
+                  rdat1.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat1[i];
+                  }
+                  rdat1.push_back(rxor);
+
+                  if (id(internal_console_dbg)) {
+                    for (auto b : rdat1) {
+                      ESP_LOGD("COMMAND", "%x - %i - %c", b,b,b);
+                    }
+                  }
+
+                  return rdat1;
+
+      - if:     
+          condition:
+            lambda: 'return (ble_device_nr == 2);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_2
+                service_uuid: 'ff00'
+                characteristic_uuid: 'ff01'
+                value: !lambda |-
+                  std::vector<unsigned char> rdat2{ 0x73,0x06,0x23,(unsigned char)ble_cmd};
+
+                  if (ble_cmd == 0x0C) {
+                    rdat2.push_back((uint8_t)((ble_cmd_parm >> 0) & 0xFF));
+                    rdat2.push_back((uint8_t)((ble_cmd_parm >> 8) & 0xFF));
+                  } else {
+                    rdat2.push_back((unsigned char)ble_cmd_parm);
+                  }
+
+                  int rlen = rdat2.size();
+                  rdat2.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat2[i];
+                  }
+                  rdat2.push_back(rxor);
+
+                  if (id(internal_console_dbg)) {
+                    for (auto b : rdat2) {
+                      ESP_LOGD("COMMAND", "%x - %i - %c", b,b,b);
+                    }
+                  }
+
+                  return rdat2;
+
+  - id: ble_command_string
+    parameters:
+      ble_device_nr: int
+      ble_cmd: int
+      ble_cmd_parm: string
+    then:
+      - logger.log:
+          level: INFO
+          format: "ble command send string: %i [0x%02X]"
+          args: [ 'ble_device_nr','ble_cmd']
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 1);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_1
+                #service_uuid: 'ff00'
+                #characteristic_uuid: 'ff01'
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat1{ 0x73,0x06,0x23,(unsigned char)ble_cmd};
+
+                  // fc41d fw
+                  if ( ble_cmd == 0x24) { rdat1.push_back(0xaa); }
+
+                  for (auto b : ble_cmd_parm) {
+                    rdat1.push_back((unsigned char)b);
+                  }
+                    
+                  int rlen = rdat1.size();
+                  rdat1.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat1[i];
+                  }
+                  rdat1.push_back(rxor);
+            
+                  if (id(internal_console_dbg)) {
+                    for (auto b : rdat1) {
+                      ESP_LOGD("COMMAND", "%x - %i - %c", b,b,b);
+                    }
+                  }
+
+                  return rdat1;
+
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 2);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_2
+                service_uuid: 'ff00'
+                characteristic_uuid: 'ff01'
+                #service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                #characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat2{ 0x73,0x06,0x23,(unsigned char)ble_cmd};
+
+                  if ( ble_cmd == 0x24) { rdat2.push_back(0xaa); }
+
+                  for (auto b : ble_cmd_parm) {
+                      rdat2.push_back((unsigned char)b);
+                  }
+                    
+                  int rlen = rdat2.size();
+                  rdat2.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat2[i];
+                  }
+                  rdat2.push_back(rxor);
+            
+                  if (id(internal_console_dbg)) {
+                    for (auto b : rdat2) {
+                      ESP_LOGI("COMMAND", "%x - %i - %c", b,b,b);
+                    }
+                  }
+
+                  return rdat2;
+
+  - id: ble_command_raw_01
+    parameters:
+      ble_device_nr: int
+      ble_cmd_parm: char[]
+    then:
+      - logger.log:
+          format: "ble command parse (raw): %i"
+          args: [ 'ble_device_nr']
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 1);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_1
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat1;
+
+                  for (auto b : ble_cmd_parm) {
+                    rdat1.push_back((unsigned char)b);
+                  }
+
+                  int rlen = rdat1.size();
+                  rdat1.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat1[i];
+                  }
+                  rdat1.push_back(rxor);
+
+                  //if (id(internal_console_dbg)) {
+                    for (auto b : rdat1) {
+                      ESP_LOGD("COMMAND raw", "%x - %i - %c", b,b,b);
+                    }
+                  //}
+
+                  return rdat1;
+                  
+
+  - id: ble_command_raw_06
+    parameters:
+      ble_device_nr: int
+      ble_cmd_parm: char[]
+    then:
+      - logger.log:
+          format: "ble command parse (raw): %i"
+          args: [ 'ble_device_nr']
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 1);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_1
+                #service_uuid: 'ff00'
+                #characteristic_uuid: 'ff06'
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff06-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat1;
+
+                  for (auto b : ble_cmd_parm) {
+                    rdat1.push_back((unsigned char)b);
+                  }
+
+                  /*                    
+                  int rlen = rdat1.size();
+                  rdat1.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat1[i];
+                  }
+                  rdat1.push_back(rxor);
+                  */
+
+                  //if (id(internal_console_dbg)) {
+                    for (auto b : rdat1) {
+                      ESP_LOGD("COMMAND raw", "%x - %i - %c", b,b,b);
+                    }
+                  //}
+
+                  return rdat1;
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 2);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_2
+                #service_uuid: 'ff00'
+                #characteristic_uuid: 'ff06'
+                service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                characteristic_uuid: 0000ff06-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat2;
+
+                  for (auto b : ble_cmd_parm) {
+                    rdat2.push_back((unsigned char)b);
+                  }
+
+                  /*                    
+                  int rlen = rdat2.size();
+                  rdat2.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat2[i];
+                  }
+                  rdat2.push_back(rxor);
+                  */
+
+                  //if (id(internal_console_dbg)) {
+                    for (auto b : rdat2) {
+                      ESP_LOGD("COMMAND raw", "%x - %i - %c", b,b,b);
+                    }
+                  //}
+
+                  return rdat2;
+
+  - id: ble_process
+    then:
+      - if:
+          condition:
+            - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized));'
+          then:
+              ### query runtimeInfo only if deviceInfo is available
+            - if:
+                condition:
+                  - lambda: 'return (id(txt_A03_1).state != "");'
+                then:
+                  ### query FC41D_FW if empty and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A12_1).state == "" && id(sensor_device_version_1).state * 100 > 133 );'
+                      then:
+                        #- delay: 250ms
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 1
+                            ble_cmd: 0x23
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+                    ### query SSID if empty, wifi connected and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A11_1).state == "" && id(sensor_device_version_1).state * 100 > 133 && id(bool_wifi_ok_1) );'
+                      then:
+                        #- delay: 250ms
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 1
+                            ble_cmd: 0x09
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+
+                  ### query runtime info last
+                  - script.stop: ble_runtime_query
+                  - script.execute: 
+                      id: ble_runtime_query
+                      ble_device_nr: 1
+                  - script.wait: ble_runtime_query
+
+
+                else:
+                  ### query deviceinfo if empty
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A03_1).state == "");'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 1
+                            ble_cmd: 0x04
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+      - delay: 250ms
+      - if:
+          condition:
+            - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized));'
+          then:
+              ### query runtimeInfo only if deviceInfo is available
+            - if:
+                condition:
+                  - lambda: 'return (id(txt_A03_2).state != "");'
+                then:
+                  ### query FC41D_FW if empty and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A12_2).state == "" && id(sensor_device_version_2).state * 100 > 133);'
+                      then:
+                        #- delay: 250ms
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 2
+                            ble_cmd: 0x23
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+                  ### query SSID if empty, wifi connected and FW > 133
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A11_2).state == "" && id(sensor_device_version_2).state * 100 > 133 && id(bool_wifi_ok_2));'
+                      then:
+                        #- delay: 250ms
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 2
+                            ble_cmd: 0x09
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+
+                  ### query runtime info last
+                  - script.stop: ble_runtime_query
+                  - script.execute: 
+                      id: ble_runtime_query
+                      ble_device_nr: 2
+                  - script.wait: ble_runtime_query
+
+                else:
+                  ### query deviceinfo if empty
+                  - if:
+                      condition:
+                        - lambda: 'return (id(txt_A03_2).state == "");'
+                      then:
+                        - script.execute: 
+                            id: ble_command_simple
+                            ble_device_nr: 2
+                            ble_cmd: 0x04
+                            ble_cmd_parm: 0x01
+                        - script.wait: ble_command_simple
+
+  - id: ble_process_cmd0F
+    then:
+      - if:
+          condition:
+            - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized) && id(switch_enhanced_cmd0F).state);'
+          then:
+            ### query cmd0F if firmware > 1.55
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 155 && id(txt_A02_1).state != "");'
+                then:
+                  - script.stop: ble_runtime_query0F
+                  - script.execute: 
+                      id: ble_runtime_query0F
+                      ble_device_nr: 1
+                  - script.wait: ble_runtime_query0F
+      - delay: 250ms
+      - if:
+          condition:
+            - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd0F).state);'
+          then:
+            ### query cmd0F if firmware > 1.55
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 155 && id(txt_A02_2).state != "");'
+                then:
+                  - script.stop: ble_runtime_query0F
+                  - script.execute: 
+                      id: ble_runtime_query0F
+                      ble_device_nr: 2
+                  - script.wait: ble_runtime_query0F
+
+  - id: ble_process_cmd13
+    then:
+      - if:
+          condition:
+            - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized) && id(switch_enhanced_cmd0F).state);'
+          then:
+            ### query cmd0F if firmware > 1.55
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 155 && id(txt_A02_1).state != "");'
+                then:
+                  - script.stop: ble_runtime_query13
+                  - script.execute: 
+                      id: ble_runtime_query13
+                      ble_device_nr: 1
+                  - script.wait: ble_runtime_query13
+      - delay: 250ms
+      - if:
+          condition:
+            - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd0F).state);'
+          then:
+            ### query cmd0F if firmware > 1.55
+            - if:
+                condition:
+                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 155 && id(txt_A02_2).state != "");'
+                then:
+                  - script.stop: ble_runtime_query13
+                  - script.execute: 
+                      id: ble_runtime_query13
+                      ble_device_nr: 2
+                  - script.wait: ble_runtime_query13
+
+
+#  - id: ble_process_cmd30
+#    then:
+#      - if:
+#          condition:
+#            - lambda: 'return (id(ble_1_connected) && id(ble_1_initialized) && id(switch_enhanced_cmd30).state);'
+#          then:
+#            ### query cmd30 if firmware > 1.30
+#            - if:
+#                condition:
+#                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 130 && id(txt_A02_1).state != "");'
+#                then:
+#                  - script.stop: ble_runtime_query30
+#                  - script.execute: 
+#                      id: ble_runtime_query30
+#                      ble_device_nr: 1
+#                  - script.wait: ble_runtime_query30
+#      - delay: 250ms
+#      - if:
+#          condition:
+#            - lambda: 'return (id(ble_2_connected) && id(ble_2_initialized) && id(switch_enhanced_cmd30).state);'
+#          then:
+#            ### query cmd30 if firmware > 1.30
+#            - if:
+#                condition:
+#                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130 && id(txt_A02_2).state != "");'
+#                then:
+#                  - script.stop: ble_runtime_query30
+#                  - script.execute: 
+#                      id: ble_runtime_query30
+#                      ble_device_nr: 2
+#                  - script.wait: ble_runtime_query30
+
+  - id: ble_runtime_query
+    parameters:
+      ble_device_nr: int
+    then:
+      - logger.log: 
+          format: "runtime query: %i"
+          args: [ 'ble_device_nr' ]      
+      - script.execute: 
+          id: ble_command_simple
+          ble_device_nr: !lambda return ble_device_nr;
+          ble_cmd: 0x03
+          ble_cmd_parm: 0x01
+      - script.wait: ble_command_simple
+
+  - id: ble_runtime_query30
+    parameters:
+      ble_device_nr: int
+    then:
+      - logger.log: 
+          format: "runtime query 30 (errorlog ?): %i"
+          args: [ 'ble_device_nr' ]      
+      - script.execute: 
+          id: ble_command_simple
+          ble_device_nr: !lambda return ble_device_nr;
+          ble_cmd: 0x30
+          ble_cmd_parm: 0x01
+      - script.wait: ble_command_simple
+
+  - id: ble_runtime_query0F
+    parameters:
+      ble_device_nr: int
+    then:
+      - logger.log: 
+          format: "runtime query 0F (cellinfos): %i"
+          args: [ 'ble_device_nr' ]      
+      - script.execute: 
+          id: ble_command_simple
+          ble_device_nr: !lambda return ble_device_nr;
+          ble_cmd: 0x0F
+          ble_cmd_parm: 0x01
+      - script.wait: ble_command_simple
+
+  - id: ble_runtime_query13
+    parameters:
+      ble_device_nr: int
+    then:
+      - logger.log:
+          format: "runtime query 13 (timer): %i"
+          args: [ 'ble_device_nr' ]
+      - script.execute:
+          id: ble_command_simple
+          ble_device_nr: !lambda return ble_device_nr;
+          ble_cmd: 0x13
+          ble_cmd_parm: 0x00
+      - script.wait: ble_command_simple
+
+  - id: ble_set_loadfirst
+    parameters:
+      ble_device_nr: int
+      switch_cmd: bool
+    then:
+      - logger.log:
+          format: "Loadfirst %i : %i"
+          args: [ble_device_nr,switch_cmd]
+      - script.execute:
+          id: ble_command_simple
+          ble_device_nr: !lambda return ble_device_nr;
+          ble_cmd: 0x0D
+          ble_cmd_parm: !lambda return switch_cmd;
+
+
+  - id: ble_set_simultan
+    parameters:
+      ble_device_nr: int
+      switch_cmd: bool
+    then:
+      - logger.log: 
+          format: "Simultan %i : %i"
+          args: [ble_device_nr,switch_cmd]
+      - script.execute:
+          id: ble_command_simple
+          ble_device_nr: !lambda return ble_device_nr;
+          ble_cmd: 0x0D
+          ble_cmd_parm: !lambda return switch_cmd;
+        
+  - id: ble_set_dod
+    parameters:
+      ble_device_nr: int
+      dod: int
+    then:
+      - logger.log: 
+          format: "set DOD: %i"
+          args: [ 'dod' ]
+      - if:
+          condition:
+            lambda: 'return ( dod <= 100 && dod >= 10);'
+          then:
+            - script.execute: 
+                id: ble_command_simple
+                ble_device_nr: !lambda return ble_device_nr;
+                ble_cmd: 0x0B
+                ble_cmd_parm: !lambda return dod;
+
+#  - id: ble_set_discharge_threshold
+#    parameters:
+#      ble_device_nr: int
+#      discharge: int
+#    then:
+#      - logger.log:
+#          format: "set discharge level: %i"
+#          args: [ 'discharge' ]
+#      - if:
+#          condition:
+#            lambda: 'return ( discharge <= 999 && discharge >= 0);'
+#          then:
+#            - script.execute:
+#                id: ble_command_simple
+#                ble_device_nr: !lambda return ble_device_nr;
+#                ble_cmd: 0x0C
+#                ble_cmd_parm: !lambda return discharge;
+
+
+
+  ### power control with timer3 ( for tests )
+  - id: ble_set_output_power
+    parameters:
+      ble_device_nr: int
+      timer: int
+      power: int
+    then:
+      - logger.log:
+          format: "set Timer Power (Device: %i - Timer: %i ): %i"
+          args: [ 'ble_device_nr','timer','power' ]
+      - lambda: !
+          std::vector<char> rdat1 { 0x73, 0x1a, 0x23, 0x12 };
+          // 73 1a 23 12  T1 S1 S2 E1 E2 V1 V2    XOR
+          //              00 00 00 00 00 64 00
+          //              00 00 00 00 00 00 00
+          //              00 00 00 00 00 00 00    ??
+
+          for (int i=0;i<21;i++) {
+              rdat1.push_back((unsigned char)id(tmp_timers)[i]);              
+          }
+          rdat1.at(4) = 0;
+          rdat1.at(11) = 0;
+          rdat1.at(18) = 1;
+          rdat1.at(23) = (power >> 0) & 0xFF;
+          rdat1.at(24) = (power >> 8) & 0xFF;
+          id(ble_command_raw_01).execute(ble_device_nr,rdat1);
+
+  - id: ble_set_output_enable
+    parameters:
+      ble_device_nr: int
+      timer: int
+      enable: int
+    then:
+      - logger.log:
+          format: "set Timer Enable (Device: %i - Timer: %i ): %i (todo)"
+          args: [ 'ble_device_nr','timer','power' ]
+      - lambda: !
+          std::vector<char> rdat1 { 0x73, 0x1a, 0x23, 0x12 };
+          // 73 1a 23 12  T1 S1 S2 E1 E2 V1 V2    XOR
+          //              00 00 00 00 00 64 00
+          //              00 00 00 00 00 00 00
+          //              00 00 00 00 00 00 00    ??
+
+          for (int i=0;i<21;i++) {
+              rdat1.push_back((unsigned char)id(tmp_timers)[i]);
+          }
+          if ( timer == 1 ) { rdat1.at(4) = enable; rdat1.at(18) = 0; }
+          if ( timer == 2 ) { rdat1.at(11) = enable; rdat1.at(18) = 0; }
+          if ( timer == 3 ) { rdat1.at(4) = 0; rdat1.at(11) = 0; rdat1.at(18) = enable; }
+          id(ble_command_raw_01).execute(ble_device_nr,rdat1);
+
+  - id: ble_notify_parse_test
+    parameters:
+      ble_device_nr: int
+      x: char[]
+    then:
+      - logger.log: 
+          format: "runtime parse test: %i"
+          args: [ 'ble_device_nr' ]
+      - lambda: |-
+          //if (id(internal_console_dbg)) {
+          //  ESP_LOGD("parse test", "x[3] = %i", x[3]);
+          //    for (auto b : x) {
+          //      ESP_LOGD("data test", "%.2x \t %i \t %c", b,b,b);
+          //    }
+          //}
+
+          //if (id(switch_debug_hexdump).state == true) {
+            ESP_LOG_BUFFER_HEXDUMP("hexdump test", &x[0], x.size(), ESP_LOG_ERROR);
+          //}
+          
+
+
+  - id: ble_notify_parse
+    parameters:
+      ble_device_nr: int
+      x: char[]
+    then:
+      - logger.log: 
+          level: INFO
+          format: "runtime parse: %i"
+          args: [ 'ble_device_nr' ]
+      - lambda: |-
+          ESP_LOGD("notify_parse", "Device: %i", ble_device_nr);
+          /*if (id(internal_console_dbg)) {
+            ESP_LOGD("parse", "x[3] = %i", x[3]);
+              for (auto b : x) {
+                ESP_LOGD("data", "%.2x \t %i \t %c", b,b,b);
+              }
+          }*/
+
+          if (id(switch_debug_hexdump).state == true) {
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+          }          
+
+          // reset error counter
+          id(internal_error_count) = 0;
+
+          auto strTime = id(sntp_time).now().strftime("%d.%m.%Y %H:%M:%S");
+          if (ble_device_nr==1) { id(txt_last_response_1).publish_state(strTime); }
+          if (ble_device_nr==2) { id(txt_last_response_2).publish_state(strTime); }
+
+          if ((std::count (x.begin(), x.end(), '_') == 16) || (std::count (x.begin(), x.begin() + 10, '_') == 3)) 
+          {   
+            ESP_LOGD("main", "Data: cmd 0x0F");
+            int pos = 0;
+            int soc = 0;
+            int t1 = 0;
+            int t2 = 0;
+            float cv = 0.0; 
+            float cmin = std::numeric_limits<float>::max();
+            float cmax = std::numeric_limits<float>::min();
+            float ct = 0.0;
+            int found = -1;
+            char delimiter = '_';
+            std::string xstr; 
+            std::vector<float> cellV;
+        
+            xstr.assign(x.begin(), x.end());                                // copy values from vector into string xstr, deep copy
+            xstr = xstr + delimiter;                                        // append delimiter to xstr 
+            found = xstr.find(delimiter);                                   // search for position of the first delimiter
+            while (found != -1)                                             // loop until no more delimiter found
+            { 
+              if(pos == 0) soc = atoi( xstr.substr(0, found).c_str());                                                                         // pos 0 don't care
+              if(pos == 1) t1 = atoi( xstr.substr(0, found).c_str());       // pos 1 get int value of temperature sensor 1
+              if(pos == 2) t2 = atoi( xstr.substr(0, found).c_str());       // pos 2 get int value of temperature sensor 2
+              if((pos >= 3) && (pos <= 16))                                 // pos 3-16 parse pos for the 14 cell voltages
+              {                                                             
+                ct = atof( xstr.substr(0, found).c_str());                  // get float value of pos x
+                cellV.push_back(ct);
+                //ESP_LOGD("cell voltage", ct.c_str());
+                cv += ct;                                                   // add actual value to var cv
+                if(ct > cmax) cmax = ct;                                    // check for higher value as stored in cmax
+                if(ct < cmin) cmin = ct;                                    // check for lower value as stored in cmin
+              }
+              xstr.erase(xstr.begin(), xstr.begin() + found + 1);           // remove parsed string part
+              found = xstr.find(delimiter);                                 // find next delimiter
+              pos++;                                                        // increment pos
+            }
+
+            /* calculate SoC from cell voltages
+                 cell empty = 3.0 Volt  =  0% SoC
+                 cell full  = 3.5 Volt  = 100% SoC
+            */
+
+            // float soccalc =  (cv/14000 - 3.0) * 200;
+            float lowlimit  = 3.050;                                           // low voltage limit
+            //float highlimit = 3.328;                                         // high voltage limit
+            float highlimit = 3.400;
+                                                                    
+            float soccalc =  100*((cv/14000) 
+                              - highlimit)/(highlimit - lowlimit) + 100;     // equation of line with two points (0,lowlimit) (100,highlimit)
+
+            ESP_LOGD("cellVoltage","soc: %i, temp1: %i, temp2: %i",soc,t1,t2);
+            ESP_LOGD("cellVoltage","cell01: %.f, cell 02: %.f, cell 03: %.f, cell 04: %.f", cellV[0], cellV[1], cellV[2], cellV[3]);
+            ESP_LOGD("cellVoltage","cell05: %.f, cell 06: %.f, cell 07: %.f, cell 08: %.f", cellV[4], cellV[5], cellV[6], cellV[7]);
+            ESP_LOGD("cellVoltage","cell09: %.f, cell 10: %.f, cell 11: %.f, cell 12: %.f", cellV[8], cellV[9], cellV[10], cellV[11]);
+            ESP_LOGD("cellVoltage","cell13: %.f, cell 14: %.f", cellV[12], cellV[13]);
+
+
+            char mtopic[48];
+            for (int i=0; i<14; i++) {
+              snprintf(mtopic, 48,"b2500v2/%i/battery/cells/%02d/voltage",ble_device_nr,i+1);
+              //ESP_LOGD("cellVoltageX","%s : %f", mtopic, cellV[i]);
+              id(mqtt_client).publish(mtopic,to_string(cellV[i]/1000));
+            }
+
+            snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/voltage",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(cv/1000));
+
+            snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/cmin",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(cmin/1000));
+
+            /* only for v1 - v2 rework with timer 
+            // disable output if cmin drops to lower 3.1V ( make a setting )
+            if ( std::isless(cmin,3100) ) { 
+              bool do_fix_01=false;
+              if (ble_device_nr == 1 && ( id(switch_powerout_1_1).state == true || id(switch_powerout_1_2).state ==true) ) { do_fix_01 = true ; }
+              if (ble_device_nr == 2 && ( id(switch_powerout_2_1).state == true || id(switch_powerout_2_2).state ==true) ) { do_fix_01 = true ; }
+              if ( do_fix_01==true) {
+                ESP_LOGI("BMS - fix","Min Voltage (%i) : %f - power off",ble_device_nr, cmin) ;
+                id(ble_command_simple).execute(ble_device_nr,0x0E,0x00); 
+              }
+            }
+            // prepare passthrough if cmax reach 3.55V ( make a setting )
+            if ( std::isgreater(cmax,3550) ) {
+              bool do_fix_02=false;
+              if (ble_device_nr == 1 && ( id(switch_powerout_1_1).state == true || id(switch_powerout_1_2).state ==true) ) { do_fix_02 = true ; }
+              if (ble_device_nr == 2 && ( id(switch_powerout_2_1).state == true || id(switch_powerout_2_2).state ==true) ) { do_fix_02 = true ; }
+              if ( do_fix_02==true) {
+                ESP_LOGI("BMS - fix","Max Voltage (%i) : %f - prepare passthrough",ble_device_nr, cmax) ;
+                id(ble_command_simple).execute(ble_device_nr,0x0E,0x00);
+              }
+            }
+            */
+
+
+            snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/cmax",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(cmax/1000));
+            snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/cavg",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(cv/14000));
+            snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/cdiff",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string((cmax-cmin)/1000));
+
+            snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/soccalc",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(soccalc));
+
+            // corrected
+            //snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/soccalc_c",ble_device_nr);
+            //id(mqtt_client).publish(mtopic,to_string(soccalc_c));
+
+            snprintf(mtopic, 48,"b2500v2/%i/battery/temp1",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(t1));
+            snprintf(mtopic, 48,"b2500v2/%i/battery/temp2",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(t2));
+
+           /*
+            id(bcsoc).publish_state(soc);                                    // SOC from device (%)
+            id(bcsoccalc).publish_state(soccalc);                            // SOC calculated from cell voltages (%)       
+            id(bctemp1).publish_state(t1);                                   // Temperature 1 (°C)
+            id(bctemp2).publish_state(t2);                                   // Temperature 2 (°C)
+            id(bccvsum).publish_state(cv/1000);                              // sum of cellvoltages = battery Voltage(V)
+            id(bccvmin).publish_state(cmin/1000);                            // lowest cellvoltage (V)
+            id(bccvmax).publish_state(cmax/1000);                            // highest cellvoltage (V)
+            id(bccvdiff).publish_state((cmax-cmin)/1000); 
+            id(bccvavg).publish_state(cv/14000);                             // avarage cellvoltage (V)
+            */
+
+          }   
+
+          else if (x[3] == 0x03) {
+            ESP_LOGD("main", "Data: runtimeInfo ");
+
+            //sensor
+            // pv_level 1 und 2
+            /*
+              [6][7]  PV-Eingangsleistung 1 (2Byte)
+              [8][9]  PV-Eingangsleistung 2 (2Byte)
+                      x[Y] | x[Z] << 8;
+            */
+            int pvPower1 = x[6] | x[7] << 8;
+            int pvPower2 = x[8] | x[9] << 8;
+            if (ble_device_nr==1) { id(sensor_pv_power_in_1_1).publish_state(pvPower1); id(sensor_pv_power_in_1_2).publish_state(pvPower2); id(sensor_pv_power_in_1_S).publish_state(pvPower1 + pvPower2);} 
+            if (ble_device_nr==2) { id(sensor_pv_power_in_2_1).publish_state(pvPower1); id(sensor_pv_power_in_2_2).publish_state(pvPower2); id(sensor_pv_power_in_2_S).publish_state(pvPower1 + pvPower2); }
+            id(sensor_pv_power_in_S_S).publish_state(id(sensor_pv_power_in_1_S).state + id(sensor_pv_power_in_2_S).state);
+            
+
+            // Batterie Stand in %
+            /*
+              [10][11]  Verbleibende Batteriekapazität in Prozent (2Byte)
+                        x[Y] | x[Z] << 8;
+            */
+            int batRemain = x[10] | x[11] << 8 ;
+            if (ble_device_nr==1) { id(sensor_bat_remain_1).publish_state(batRemain / 10); }
+            if (ble_device_nr==2) { id(sensor_bat_remain_2).publish_state(batRemain / 10); }
+
+            // Entladen bei weniger als ??? Watt PV Eingang
+            /*
+              [19][20]  Entladeschwelle(2Byte)
+                        x[Y] | x[Z] << 8;
+            */
+            /*
+            int disCharge = x[19] | x[20] << 8;
+            if (ble_device_nr==1) { 
+              if (id(sensor_discharge_threshold_1).state != disCharge ) { id(sensor_discharge_threshold_1).publish_state(disCharge); }
+            }
+            if (ble_device_nr==2) { 
+              if (id(sensor_discharge_threshold_2).state != disCharge ) { id(sensor_discharge_threshold_2).publish_state(disCharge); }
+            }
+            */
+
+            // Füllstand des Akkus in Wh
+            /*
+              [22][23]  Gesamtkapazität der Batterie (1Byte)
+                        x[Y] | x[Z] << 8;
+            */
+            int batCapacity = x[22] | x[23] << 8;
+            if (ble_device_nr==1) { id(sensor_bat_capacity_1).publish_state(batCapacity); }
+            if (ble_device_nr==2) { id(sensor_bat_capacity_2).publish_state(batCapacity); }
+
+            // Ausgangsleistung in Watt
+            /*
+              [24][25]  Ausgangsleistung 1(1Byte)
+              [26][27]  Ausgangsleistung 2(1Byte)
+                        x[Y] | x[Z] << 8;
+            */
+            int powerOut1 = x[24] | x[25] << 8;
+            int powerOut2 = x[26] | x[27] << 8;
+            if (ble_device_nr==1) { id(sensor_power_out_1_1).publish_state(powerOut1); id(sensor_power_out_1_2).publish_state(powerOut2); id(sensor_power_out_1_S).publish_state(powerOut1 + powerOut2); }
+            if (ble_device_nr==2) { id(sensor_power_out_2_1).publish_state(powerOut1); id(sensor_power_out_2_2).publish_state(powerOut2); id(sensor_power_out_2_S).publish_state(powerOut1 + powerOut2); }
+            id(sensor_power_out_S_S).publish_state(id(sensor_power_out_1_S).state + id(sensor_power_out_2_S).state);
+
+            // Geräte Version ( Firmware ? )
+            /*
+              [12]  B2500 Geräteversion (1Byte)
+                    0-255 ( ~ anzeige als /100 )
+            */
+            float dev_version = x[12];
+            if (ble_device_nr==1) { id(sensor_device_version_1).publish_state(dev_version / 100); }
+            if (ble_device_nr==2) { id(sensor_device_version_2).publish_state(dev_version / 100); }
+
+            // Temperature Sensors 
+            /*
+              [33]  Temp 1
+              [35]  Temp 2
+                    
+            */
+            int dev_temp1 = x[33];
+            int dev_temp2 = x[35];
+            if (ble_device_nr==1) { id(sensor_device_temp1_1).publish_state(dev_temp1); id(sensor_device_temp1_2).publish_state(dev_temp2);}
+            if (ble_device_nr==2) { id(sensor_device_temp2_1).publish_state(dev_temp1); id(sensor_device_temp2_2).publish_state(dev_temp2);}
+
+            // 
+            /*
+              [18]  Dod (1Byte)
+                    0-100 Prozentualer Anteil der Entladeleistung an der Nennleistung
+            */
+            int dod_level = x[18];
+            if (ble_device_nr==1) { 
+              if (id(sensor_dod_1).state != dod_level) { id(sensor_dod_1).publish_state(dod_level); }
+            }
+            if (ble_device_nr==2) { 
+              if (id(sensor_dod_2).state != dod_level) { id(sensor_dod_2).publish_state(dod_level); }
+            }
+            //if (ble_device_nr==2) { id(sensor_dod_2).publish_state(dod_level); }
+
+
+            // binary sensor / bool
+            // pv 1 und 2 in
+            /*
+                [x4]  PV IN 1 Zustand (1Byte) 
+                [x5]  PV IN 2 Zustand (1Byte) 
+                      0x00 （off）
+                      0x01 （Aufladung）
+                      0x02 （transparent für Wechselrichter）
+            */
+            if (ble_device_nr==1) { 
+              if( x[4] == 0x00 ) { id(bool_pv_active_1_1).publish_state(false);id(bool_pv_transparent_1_1).publish_state(false); }
+              if( x[4] == 0x01 ) { id(bool_pv_active_1_1).publish_state(true); id(bool_pv_transparent_1_1).publish_state(false); }
+              if( x[4] == 0x02 ) { id(bool_pv_active_1_1).publish_state(true); id(bool_pv_transparent_1_1).publish_state(true); }
+              if( x[5] == 0x00 ) { id(bool_pv_active_1_2).publish_state(false);id(bool_pv_transparent_1_2).publish_state(false); }
+              if( x[5] == 0x01 ) { id(bool_pv_active_1_2).publish_state(true); id(bool_pv_transparent_1_2).publish_state(false); }
+              if( x[5] == 0x02 ) { id(bool_pv_active_1_2).publish_state(true); id(bool_pv_transparent_1_2).publish_state(true); }        
+            }
+            if (ble_device_nr==2) { 
+              if( x[4] == 0x00 ) { id(bool_pv_active_2_1).publish_state(false);id(bool_pv_transparent_2_1).publish_state(false); }
+              if( x[4] == 0x01 ) { id(bool_pv_active_2_1).publish_state(true); id(bool_pv_transparent_2_1).publish_state(false); }
+              if( x[4] == 0x02 ) { id(bool_pv_active_2_1).publish_state(true); id(bool_pv_transparent_2_1).publish_state(true); }
+              if( x[5] == 0x00 ) { id(bool_pv_active_2_2).publish_state(false);id(bool_pv_transparent_2_2).publish_state(false); }
+              if( x[5] == 0x01 ) { id(bool_pv_active_2_2).publish_state(true); id(bool_pv_transparent_2_2).publish_state(false); }
+              if( x[5] == 0x02 ) { id(bool_pv_active_2_2).publish_state(true); id(bool_pv_transparent_2_2).publish_state(true); }        
+            }
+
+            // Entlademodus 
+            /*
+                [13]  Einstellung des Ladevorgangs (1Byte)
+                      0x00 （Simultanes Laden/Entladen）
+                      0x01 （Erst Laden, dann Entladen）
+            */
+
+            if (ble_device_nr==1) { 
+              //if( x[13] == 0x00 ) { id(switch_simultan_1).turn_on(); }
+              //if( x[13] == 0x01 ) { id(switch_simultan_1).turn_off(); }
+              if( x[13] == 0x00 ) { id(switch_loadfirst_1).turn_off(); }
+              if( x[13] == 0x01 ) { id(switch_loadfirst_1).turn_on(); }
+            }
+            if (ble_device_nr==2) { 
+              //if( x[13] == 0x00 ) { id(switch_simultan_2).turn_on(); }
+              //if( x[13] == 0x01 ) { id(switch_simultan_2).turn_off(); }
+
+              if( x[13] == 0x00 ) { id(switch_loadfirst_2).turn_off(); }
+              if( x[13] == 0x01 ) { id(switch_loadfirst_2).turn_on(); }
+            }
+
+            // RESERVED ( wifi / mqtt )
+            /*
+                [15]  Reserve(1Byte)
+                      0x00 wifi funktioniert nicht
+                      0x01 wifi ok, mqtt nicht verbunden
+                      0x02 wifi ok, mqtt connect ok
+                      NEW:
+                      maybe wifi / mqtt
+                      00 = false / false
+                      01 = true / false
+                      02 = false / true
+                      03 = true / true
+                      -------
+                      first part means not wifi connected ?!?!? 
+                      00 = ??? / mqtt not connected
+                      01 = ??? / mqtt not connected
+                      02 = ??? / mqtt connected
+                      03 = ??? / mqtt connected                      
+            */
+            // wifi and mqtt
+            if (ble_device_nr==1) {             
+              if( x[15] == 0x00 ) { id(bool_wifi_ok_1).publish_state(false); id(bool_mqtt_ok_1).publish_state(false); }
+              if( x[15] == 0x01 ) { id(bool_wifi_ok_1).publish_state(true);  id(bool_mqtt_ok_1).publish_state(false); }
+              if( x[15] == 0x02 ) { id(bool_wifi_ok_1).publish_state(false);  id(bool_mqtt_ok_1).publish_state(true);  }
+              if( x[15] == 0x03 ) { id(bool_wifi_ok_1).publish_state(true);  id(bool_mqtt_ok_1).publish_state(true);  }
+            }
+            if (ble_device_nr==2) {             
+              if( x[15] == 0x00 ) { id(bool_wifi_ok_2).publish_state(false); id(bool_mqtt_ok_2).publish_state(false); }
+              if( x[15] == 0x01 ) { id(bool_wifi_ok_2).publish_state(true);  id(bool_mqtt_ok_2).publish_state(false); }
+              if( x[15] == 0x02 ) { id(bool_wifi_ok_2).publish_state(false);  id(bool_mqtt_ok_2).publish_state(true);  }
+              if( x[15] == 0x03 ) { id(bool_wifi_ok_2).publish_state(true);  id(bool_mqtt_ok_2).publish_state(true);  }
+            }
+
+            // power 1 und 2 enabled/disabled
+            /*
+                [14]  Entlade-Modus / Enabled (1Byte)
+                      0x00 OUT1&OUT2 Sperren
+                      0x01 nur OUT1 Freigabe
+                      0x02 nur OUT2 Freigabe
+                      0x03 OUT1&OUT2 Freigabe        
+            */
+            /*
+            static int power1_old = 0;  
+            static int power2_old = 0;  
+            if (ble_device_nr==1) { 
+              //ESP_LOGD("POWER1_OUT", "old: %i, new: %i", power1_old,x[14]);
+              if ( x[14] != power1_old ) {
+                if( x[14] == 0x00 ) { id(switch_powerout_1_1).turn_off(); id(switch_powerout_1_2).turn_off();}
+                if( x[14] == 0x01 ) { id(switch_powerout_1_1).turn_on();  id(switch_powerout_1_2).turn_off();}
+                if( x[14] == 0x02 ) { id(switch_powerout_1_1).turn_off(); id(switch_powerout_1_2).turn_on(); }
+                if( x[14] == 0x03 ) { id(switch_powerout_1_1).turn_on();  id(switch_powerout_1_2).turn_on(); }
+                power1_old = x[14];
+              }
+            }
+            if (ble_device_nr==2) {
+              //ESP_LOGD("POWER2_OUT", "old: %i, new: %i", power2_old,x[14]);
+              if ( x[14] != power2_old ) {
+                if( x[14] == 0x00 ) { id(switch_powerout_2_1).turn_off(); id(switch_powerout_2_2).turn_off();}
+                if( x[14] == 0x01 ) { id(switch_powerout_2_1).turn_on();  id(switch_powerout_2_2).turn_off();}
+                if( x[14] == 0x02 ) { id(switch_powerout_2_1).turn_off(); id(switch_powerout_2_2).turn_on(); }
+                if( x[14] == 0x03 ) { id(switch_powerout_2_1).turn_on();  id(switch_powerout_2_2).turn_on(); }
+                power2_old = x[14];
+              }
+            }
+            */
+            // power 1 und 2 active
+            /*
+                [16]  Ausgang Port 1 Status (1Byte)
+                [17]  Ausgang Port 2 Status (1Byte)
+                      0x00（Aus）
+                      0x01（Entladung）
+            */
+            if (ble_device_nr==1) {
+              if( x[16] == 0x00 ) { id(bool_power_active_1_1).publish_state(false);}
+              if( x[16] == 0x01 ) { id(bool_power_active_1_1).publish_state(true); }
+              if( x[17] == 0x00 ) { id(bool_power_active_1_2).publish_state(false);}
+              if( x[17] == 0x01 ) { id(bool_power_active_1_2).publish_state(true); }
+            }
+            if (ble_device_nr==2) {
+              if( x[16] == 0x00 ) { id(bool_power_active_2_1).publish_state(false);}
+              if( x[16] == 0x01 ) { id(bool_power_active_2_1).publish_state(true); }
+              if( x[17] == 0x00 ) { id(bool_power_active_2_2).publish_state(false);}
+              if( x[17] == 0x01 ) { id(bool_power_active_2_2).publish_state(true); }
+            }
+            // zusatzakku 1 und 2
+            /*
+                [28]  Ist Netzgerät 1 angeschlossen (1Byte)
+                [29]  Ist Netzgerät 2 angeschlossen (1Byte)
+                      0x00（Kein Akkupack angeschlossen）
+                      0x01（Verbinden Sie das Netzteil）        
+            */
+            if (ble_device_nr==1) {            
+              if( x[28] == 0x00 ) { id(bool_extern_connected_1_1).publish_state(false);}
+              if( x[28] == 0x01 ) { id(bool_extern_connected_1_1).publish_state(true); }
+              if( x[29] == 0x00 ) { id(bool_extern_connected_1_2).publish_state(false);}
+              if( x[29] == 0x01 ) { id(bool_extern_connected_1_2).publish_state(true); }
+            }
+            if (ble_device_nr==2) {
+              if( x[28] == 0x00 ) { id(bool_extern_connected_2_1).publish_state(false);}
+              if( x[28] == 0x01 ) { id(bool_extern_connected_2_1).publish_state(true); }
+              if( x[29] == 0x00 ) { id(bool_extern_connected_2_2).publish_state(false);}
+              if( x[29] == 0x01 ) { id(bool_extern_connected_2_2).publish_state(true); }
+            }
+
+            if (ble_device_nr==1) { 
+              auto call_21 = id(txt_scene_1).make_call(); 
+              if( x[21] == 0x00 ) { call_21.set_value("Tag"); }
+              if( x[21] == 0x01 ) { call_21.set_value("Nacht"); }
+              if( x[21] == 0x02 ) { call_21.set_value("Morgens/Abends"); }
+              call_21.perform();
+            }
+            if (ble_device_nr==2) { 
+              auto call_21 = id(txt_scene_2).make_call(); 
+              if( x[21] == 0x00 ) { call_21.set_value("Tag"); }
+              if( x[21] == 0x01 ) { call_21.set_value("Nacht"); }
+              if( x[21] == 0x02 ) { call_21.set_value("Morgens/Abends"); }
+              call_21.perform();
+            }
+        
+            if (ble_device_nr==1) { 
+              auto call_30 = id(txt_region_1).make_call(); 
+              if( x[30] == 0x00 ) { call_30.set_value("EU"); }
+              if( x[30] == 0x01 ) { call_30.set_value("China"); }
+              if( x[30] == 0x02 ) { call_30.set_value("non-EU"); }
+              if( x[30] == 0xff ) { call_30.set_value("not SET"); }
+              call_30.perform();
+            }
+            if (ble_device_nr==2) { 
+              auto call_30 = id(txt_region_2).make_call(); 
+              if( x[30] == 0x00 ) { call_30.set_value("EU"); }
+              if( x[30] == 0x01 ) { call_30.set_value("China"); }
+              if( x[30] == 0x02 ) { call_30.set_value("non-EU"); }
+              if( x[30] == 0xff ) { call_30.set_value("not SET"); }
+              call_30.perform();
+            }
+
+            // internal mode description
+            /*
+                txt_A80_1 / txt_A80_2
+                0x00 OFF
+                0x01 CHARGE
+                0x02 DISCHARGE 
+                0x03 FLOW 
+                0x04 PT2 
+                0x05 TRANS
+            */
+      
+
+            if (ble_device_nr==1) { 
+              auto call_80 = id(txt_A80_1).make_call();
+              if ( id(bool_pv_transparent_1_1).state == true  && id(bool_pv_transparent_1_2).state == true ) { call_80.set_value("trans"); } 
+              else { 
+                if ( id(bool_pv_transparent_1_1).state == false && id(bool_pv_transparent_1_2).state == true ) { call_80.set_value("pt2"); } 
+                else {
+                  if ( id(sensor_pv_power_in_1_S).state == 0 && id(sensor_power_out_1_S).state == 0) { call_80.set_value("off"); }
+                  if ( id(sensor_pv_power_in_1_S).state > 0  && id(sensor_power_out_1_S).state == 0) { call_80.set_value("charge"); }
+                  if ( id(sensor_pv_power_in_1_S).state == 0 && id(sensor_power_out_1_S).state > 0)  { call_80.set_value("discharge"); }
+                  if ( id(sensor_pv_power_in_1_S).state > 0  && id(sensor_power_out_1_S).state > 0)  { call_80.set_value("flow"); }
+                }
+              }
+              call_80.perform();
+            }
+            if (ble_device_nr==2) {
+              auto call_80 = id(txt_A80_2).make_call();
+              if ( id(bool_pv_transparent_2_1).state == true && id(bool_pv_transparent_2_2).state == true ) { call_80.set_value("trans"); } 
+              else {
+                if ( id(bool_pv_transparent_2_1).state == false && id(bool_pv_transparent_2_2).state == true ) { call_80.set_value("pt2"); } 
+                else {
+                  if ( id(sensor_pv_power_in_2_S).state == 0 && id(sensor_power_out_2_S).state == 0) { call_80.set_value("off"); }
+                  if ( id(sensor_pv_power_in_2_S).state > 0  && id(sensor_power_out_2_S).state == 0) { call_80.set_value("charge"); }
+                  if ( id(sensor_pv_power_in_2_S).state == 0 && id(sensor_power_out_2_S).state > 0)  { call_80.set_value("discharge"); }
+                  if ( id(sensor_pv_power_in_2_S).state > 0  && id(sensor_power_out_2_S).state > 0)  { call_80.set_value("flow"); }
+                }
+              }
+              call_80.perform();
+            }
+
+          }
+          else if (x[3] == 0x04) {
+            ESP_LOGD("main", "Data: deviceInfo ");
+            //for (auto b : x) {
+            //  ESP_LOGD("data", "%i", b);
+            //}
+            //  's<#?type=<5>,id=<24>,mac=<12>t'
+            // ESP_LOGD("data", "%s", vType);
+            int data_len = x.size();
+
+            unsigned char vType[8];
+            for (int i=9;i<14;i++) {
+              vType[i-9] = x[i];
+            }
+            vType[5] = 0x00;
+        
+            unsigned char vID[32];
+            for (int i=18;i<42;i++) {
+              vID[i-18] = x[i];
+            }
+            vID[24]=0x00;
+        
+            unsigned char vMac[16];
+            for (int i=47;i<59;i++) {
+              vMac[i-47] = x[i];
+            }
+            vMac[12] = 0x00;
+
+            ESP_LOGD("deviceInfo", "%i: %s [%s] %s", data_len,vType,vMac,vID);
+            std::string sType(reinterpret_cast<char*>(vType));
+            std::string sID(reinterpret_cast<char*>(vID));
+            std::string sMac(reinterpret_cast<char*>(vMac));
+            if (ble_device_nr==1) { id(txt_A01_1).publish_state(sType); id(txt_A02_1).publish_state(sID); id(txt_A03_1).publish_state(sMac); }
+            if (ble_device_nr==2) { id(txt_A01_2).publish_state(sType); id(txt_A02_2).publish_state(sID); id(txt_A03_2).publish_state(sMac); }
+          }
+
+          // get wifi info - "admin mode ?!?" only
+          else if (x[3] == 0x08) {
+            ESP_LOGD("main", "Data: wifiInfo ");
+            int data_len = x.size();
+            unsigned char vSSID[32];
+
+            for (int i=4;i<data_len-1;i++) {
+              vSSID[i-4] = x[i];
+            }
+            vSSID[data_len-5] = 0x00;
+            ESP_LOGD("deviceInfo", "%i: %s", data_len,vSSID);
+            std::string sSSID(reinterpret_cast<char*>(vSSID));
+            if (ble_device_nr==1) { id(txt_A11_1).publish_state(sSSID); }
+            if (ble_device_nr==2) { id(txt_A11_2).publish_state(sSSID); }
+
+            for (auto b : x) {
+              ESP_LOGD("data", "%x \t %i \t %x", b,b,b);
+            }
+          }
+          else if (x[3] == 0x09) {          
+            ESP_LOGD("main", "Data: Signalstrength/SSID");
+            int data_len = x.size();
+            unsigned int vSignal;
+            unsigned char vSSID[32];
+
+            vSignal = int(x[4]);
+
+            for (int i=6;i<data_len;i++) {
+              vSSID[i-6] = char(x[i]);
+            }
+            vSSID[data_len-6] = 0x00;
+            ESP_LOGI("Signal/SSID", "%i: %s", vSignal,vSSID);
+            std::string sSSID(reinterpret_cast<char*>(vSSID));
+            if (ble_device_nr==1) { id(txt_A11_1).publish_state(sSSID); }
+            if (ble_device_nr==2) { id(txt_A11_2).publish_state(sSSID); }
+          }
+          else if (x[3] == 0x23) {          
+            ESP_LOGD("main", "Data: fc41d FW ");            
+            int data_len = x.size();
+            unsigned char vFC41D_FW[16];
+
+            for (int i=4;i<data_len-2;i++) {
+              vFC41D_FW[i-4] = char(x[i]);
+            }
+            vFC41D_FW[data_len-6] = 0x00;
+            ESP_LOGI("FC41D FW", "%i: %s", data_len,vFC41D_FW);
+            std::string sFC41D_FW(reinterpret_cast<char*>(vFC41D_FW));
+            if (ble_device_nr==1) { id(txt_A12_1).publish_state(sFC41D_FW); }
+            if (ble_device_nr==2) { id(txt_A12_2).publish_state(sFC41D_FW); }
+          }
+          else if (x[3] == 0x30) {
+            ESP_LOGI("main", "Data: cmd 0x30");
+            int data_len = x.size();
+            ESP_LOGI("data 30 - raw" , "Device %i",ble_device_nr);
+            ESP_LOGI("data 30 - raw" , "0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[0], x[1], x[2], x[3]);
+            for(int i=4;i<data_len-1;i++) {
+              float data1 = x[i+1] | x[i+2] << 8 | x[i+3] << 10 | x[i+4] << 18;
+              float data2 = x[i+5] | x[i+6] << 8 | x[i+7] << 10 | x[i+8] << 18;
+              //ESP_LOGD("data 30 - raw" , "0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[i], x[i+1], x[i+2], x[i+3], x[i+4],x[i+5],x[i+6],x[i+7],x[i+8]);
+              ESP_LOGI("data 30 - raw" , "0x%.2x - %.f - %.f", x[i], data1,data2);
+              i += 8;
+            }
+            //if (ble_device_nr==1) { id(ble_1_wait_process) = 0; }
+            //if (ble_device_nr==2) { id(ble_2_wait_process) = 0; }
+          }
+          else if (x[3] == 0x13) {
+            ESP_LOGI("main", "Data: cmd 0x13 (timer) - Device: %i",ble_device_nr );
+            int data_len = x.size();
+            ESP_LOGI("timer" , "1: %i: %02i:%02i - %02i:%02i ( %3i W )", x[5], x[6],x[7],x[8],x[9],(x[11] << 8) | x[10]);
+            ESP_LOGI("timer" , "2: %i: %02i:%02i - %02i:%02i ( %3i W )", x[12], x[13],x[14],x[15],x[16],(x[18] << 8) | x[17]);
+            ESP_LOGI("timer" , "3: %i: %02i:%02i - %02i:%02i ( %3i W )", x[19], x[20],x[21],x[22],x[23],(x[25] << 8) | x[24]);
+            for (int i=5;i<26;i++) {
+              id(tmp_timers)[i-5] = x[i];
+            }
+
+            char mtopic[48]; 
+            char mvalue[48]; 
+            int mpower = 0;
+            #
+            snprintf(mtopic, 48,"b2500v2/%i/timer/1/enabled",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(x[5]));
+            snprintf(mtopic, 48,"b2500v2/%i/timer/1/value",ble_device_nr);
+            snprintf(mvalue, 48,"%02i:%02i - %02i:%02i ( %3i W )",x[6],x[7],x[8],x[9],(x[11] << 8) | x[10]);
+            id(mqtt_client).publish(mtopic,to_string(mvalue));
+            mpower = x[11] << 8 | x[10] ;
+            snprintf(mtopic, 48,"b2500v2/%i/timer/1/power",ble_device_nr);        
+            id(mqtt_client).publish(mtopic,to_string(mpower));
+            #
+            snprintf(mtopic, 48,"b2500v2/%i/timer/2/enabled",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(x[12]));
+            snprintf(mtopic, 48,"b2500v2/%i/timer/2/value",ble_device_nr);
+            snprintf(mvalue, 48,"%02i:%02i - %02i:%02i ( %3i W )",x[13],x[14],x[15],x[16],(x[18] << 8) | x[17]);
+            id(mqtt_client).publish(mtopic,to_string(mvalue));
+            mpower = x[18] << 8 | x[17] ;
+            snprintf(mtopic, 48,"b2500v2/%i/timer/2/power",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(mpower));
+            #
+            snprintf(mtopic, 48,"b2500v2/%i/timer/3/enabled",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(x[19]));
+            snprintf(mtopic, 48,"b2500v2/%i/timer/3/value",ble_device_nr);
+            snprintf(mvalue, 48,"%02i:%02i - %02i:%02i ( %3i W )",x[20],x[21],x[22],x[23],(x[25] << 8) | x[24]);
+            id(mqtt_client).publish(mtopic,to_string(mvalue));
+            mpower = x[25] << 8 | x[24] ;
+            snprintf(mtopic, 48,"b2500v2/%i/timer/3/power",ble_device_nr);
+            id(mqtt_client).publish(mtopic,to_string(mpower));
+          }
+          else if (x[3] == 0x01) {
+            ESP_LOGD("main", "Data: cmd 0x01");
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+          }
+          else if (x[3] == 0x81) {
+            ESP_LOGD("main", "Data: cmd 0x81");
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+          }
+          else {
+            /*int data_len = x.size();
+            for(int i=0;i<data_len;i++) {
+              int d1 = x[i];
+              ESP_LOGD("unknown" , "%x \t %i \t %c" , d1, d1, char(d1));
+            }*/
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+          }
+
