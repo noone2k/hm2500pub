@@ -1,18 +1,29 @@
 # hm2500pub
 
+HW Version 1 ( HMB-X ) :  bc2500-ble-idf.yaml
+
+HW Version 2 ( HMA-X ) :  b2500-v2-ble-idf.yaml
+
+----------------------
+
 - only some notes ... vllt. wirds ja mal ne ordentlich readme :D
 
 - config options ( secret.yaml )
-    ( max 2. hm2500 )
+    ( max 2. hm2500 - HMB-X )
     * hm2500_1_mac: "E8:8D:A6:XX:XX:XX"
     * hm2500_2_mac: "E8:8D:A6:XX:XX:XX"
 
-    ( powerzero )
+    ( max 2. hm2500 - HMA-X )
+    * hm2500_3_mac: "E8:8D:A6:XX:XX:XX"
+    * hm2500_4_mac: "E8:8D:A6:XX:XX:XX"
+
+
+-  powerzero nur in v1
     * mqtt_grid_power: "tibber-esp/sensor/power/state"
     * mqtt_opendtu_limit_state: "openDTU/XXXXXXXXXXXX/state/limit_relative"
-    * mqtt_opendtu_limit_cmd: "openDTU/XXXXXXXXXXXX/cmd/limit_persistent_relative"
+    * mqtt_opendtu_limit_cmd: "openDTU/XXXXXXXXXXXX/cmd/limit_nonpersistent_relative"
 
-- Webinterface ( im Prinzip läuft das dann standalone ):
+- Webinterface ( im Prinzip läuft das dann standalone - momentan nur v1 ):
     A(X) -- Informationen zum Gerät ( X = 1/2 , entspricht Batterie 1 oder 2 )
     D(X) -- Status Informationen
 
