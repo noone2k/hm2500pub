@@ -539,7 +539,7 @@ number:
     restore_value: True
     on_value:
       - script.execute:
-          id: ble_set_output_power
+          id: ble_set_timer_power
           ble_device_nr: 1
           timer: 3
           power: !lambda return x; 
@@ -612,14 +612,14 @@ switch:
     on_turn_on:
       then:
         - script.execute:
-            id: ble_set_output_enable
+            id: ble_set_timer_enable
             ble_device_nr: 1
             timer: 1
             enable: 1
     on_turn_off:
       then:
         - script.execute:
-            id: ble_set_output_enable
+            id: ble_set_timer_enable
             ble_device_nr: 1
             timer: 1
             enable: 0
@@ -634,14 +634,14 @@ switch:
     on_turn_on:
       then:
         - script.execute:
-            id: ble_set_output_enable
+            id: ble_set_timer_enable
             ble_device_nr: 1
             timer: 2
             enable: 1
     on_turn_off:
       then:
         - script.execute:
-            id: ble_set_output_enable
+            id: ble_set_timer_enable
             ble_device_nr: 1
             timer: 2
             enable: 0
@@ -657,14 +657,14 @@ switch:
     on_turn_on:
       then:
         - script.execute:
-            id: ble_set_output_enable
+            id: ble_set_timer_enable
             ble_device_nr: 1
             timer: 3
             enable: 1
     on_turn_off:
       then:
         - script.execute:
-            id: ble_set_output_enable
+            id: ble_set_timer_enable
             ble_device_nr: 1
             timer: 3
             enable: 0
@@ -1608,7 +1608,8 @@ script:
       ble_cmd_parm: char[]
     then:
       - logger.log:
-          format: "ble command parse (raw): %i"
+          level: INFO
+          format: "ble command send (raw): %i"
           args: [ 'ble_device_nr']
       - if:
           condition:
@@ -2051,13 +2052,14 @@ script:
 
 
   ### power control with timer3 ( for tests )
-  - id: ble_set_output_power
+  - id: ble_set_timer_power
     parameters:
       ble_device_nr: int
       timer: int
       power: int
     then:
       - logger.log:
+          level: INFO
           format: "set Timer Power (Device: %i - Timer: %i ): %i"
           args: [ 'ble_device_nr','timer','power' ]
       - lambda: !
@@ -2077,15 +2079,16 @@ script:
           rdat1.at(24) = (power >> 8) & 0xFF;
           id(ble_command_raw_01).execute(ble_device_nr,rdat1);
 
-  - id: ble_set_output_enable
+  - id: ble_set_timer_enable
     parameters:
       ble_device_nr: int
       timer: int
       enable: int
     then:
       - logger.log:
-          format: "set Timer Enable (Device: %i - Timer: %i ): %i (todo)"
-          args: [ 'ble_device_nr','timer','power' ]
+          level: INFO
+          format: "set Timer Enable (Device: %i - Timer: %i ): %i"
+          args: [ 'ble_device_nr','timer','enable' ]
       - lambda: !
           std::vector<char> rdat1 { 0x73, 0x1a, 0x23, 0x12 };
           // 73 1a 23 12  T1 S1 S2 E1 E2 V1 V2    XOR
