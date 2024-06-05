@@ -2075,6 +2075,10 @@ script:
           rdat1.at(4) = 0;
           rdat1.at(11) = 0;
           rdat1.at(18) = 1;
+          rdat1.at(19) = 0;
+          rdat1.at(20) = 0;
+          rdat1.at(21) = 24;
+          rdat1.at(22) = 0;
           rdat1.at(23) = (power >> 0) & 0xFF;
           rdat1.at(24) = (power >> 8) & 0xFF;
           id(ble_command_raw_01).execute(ble_device_nr,rdat1);
