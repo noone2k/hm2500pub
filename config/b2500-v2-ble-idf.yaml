@@ -168,9 +168,14 @@ globals:
     type: int
     initial_value: '0'
 
-  - id: tmp_timers
+  - id: tmp_timers_1
     type: char[22]
     initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
+
+  - id: tmp_timers_2
+    type: char[22]
+    initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
+
 
 esp32_ble:
   id: ble
@@ -2084,7 +2089,7 @@ script:
           //              00 00 00 00 00 00 00    ??
 
           for (int i=0;i<21;i++) {
-              rdat1.push_back((unsigned char)id(tmp_timers)[i]);              
+              rdat1.push_back((unsigned char)id(tmp_timers_1)[i]);              
           }
           rdat1.at(4) = 0;
           rdat1.at(11) = 0;
@@ -2115,7 +2120,7 @@ script:
           //              00 00 00 00 00 00 00    ??
 
           for (int i=0;i<21;i++) {
-              rdat1.push_back((unsigned char)id(tmp_timers)[i]);
+              rdat1.push_back((unsigned char)id(tmp_timers_1)[i]);
           }
           if ( timer == 0 ) { rdat1.at(4) = 0; rdat1.at(11) = 0; rdat1.at(18) = 0; }
           if ( timer == 1 ) { rdat1.at(4) = enable; rdat1.at(18) = 0; }
@@ -2731,7 +2736,7 @@ script:
             ESP_LOGI("timer" , "2: %i: %02i:%02i - %02i:%02i ( %3i W )", x[12], x[13],x[14],x[15],x[16],(x[18] << 8) | x[17]);
             ESP_LOGI("timer" , "3: %i: %02i:%02i - %02i:%02i ( %3i W )", x[19], x[20],x[21],x[22],x[23],(x[25] << 8) | x[24]);
             for (int i=5;i<26;i++) {
-              id(tmp_timers)[i-5] = x[i];
+              id(tmp_timers_1)[i-5] = x[i];
             }
 
             char mtopic[48]; 
