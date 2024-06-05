@@ -398,6 +398,20 @@ button:
         - script.wait: ble_command_simple
 
   - platform: template
+    id: btn_device_1_timers_disable
+    name: "D1-80: Disable All Timers"
+    command_topic: b2500v2/1/timer/0/enabled/set
+    disabled_by_default: True
+    on_press:
+      then:
+        - script.execute:
+            id: ble_set_timer_enable
+            ble_device_nr: 1
+            timer: 0
+            enable: 0
+        - script.wait: ble_set_timer_enable
+          
+  - platform: template
     id: test_1_cmd30
     name: "Test: 1 - CMD30"
     on_press:
@@ -2103,6 +2117,7 @@ script:
           for (int i=0;i<21;i++) {
               rdat1.push_back((unsigned char)id(tmp_timers)[i]);
           }
+          if ( timer == 0 ) { rdat1.at(4) = 0; rdat1.at(11) = 0; rdat1.at(18) = 0; }
           if ( timer == 1 ) { rdat1.at(4) = enable; rdat1.at(18) = 0; }
           if ( timer == 2 ) { rdat1.at(11) = enable; rdat1.at(18) = 0; }
           if ( timer == 3 ) { rdat1.at(4) = 0; rdat1.at(11) = 0; rdat1.at(18) = enable; }
