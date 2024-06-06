@@ -7,7 +7,7 @@ esphome:
     priority: -100
     then:
       #- switch.turn_off: switch_opendtu_limit
-      - switch.turn_off: switch_enhanced_dod
+      #- switch.turn_off: switch_enhanced_dod
       - switch.turn_on: switch_enhanced_cmd0F
       #- switch.turn_off: switch_enhanced_cmd30
       #- switch.turn_off: switch_powerout_1_1
