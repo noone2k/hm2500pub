@@ -37,6 +37,24 @@ shorts_diz[tc]="Temp - Alarm - C "
 shorts_diz[tf]="Temp - Alarm - D "
 shorts_diz[fc]="FC41D - Version  "
 
+### V2
+shorts_diz[md]="Discharge mode   "
+shorts_diz[d1]="Time1 enabled    "
+shorts_diz[e1]="Time1 start time "
+shorts_diz[f1]="Time1 end time   "
+shorts_diz[h1]="Time1 power      "
+shorts_diz[d2]="Time2 enabled    "
+shorts_diz[e2]="Time2 start time "
+shorts_diz[f2]="Time2 end time   "
+shorts_diz[h2]="Time2 power      "
+shorts_diz[d3]="Time3 enabled    "
+shorts_diz[e3]="Time3 start time "
+shorts_diz[f3]="Time3 end time   "
+shorts_diz[h3]="Time3 power      "
+shorts_diz[sg]="Sensor connected "
+shorts_diz[sp]="Sensor Range ?   "
+shorts_diz[st]="Sensor Value     "
+
 break_loop=0
 m_array=()
 OLD_IFS=$IFS
