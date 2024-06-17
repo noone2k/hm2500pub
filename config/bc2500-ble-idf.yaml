@@ -591,6 +591,8 @@ switch:
     id: switch_enhanced_dod
     name: "ENHANCED: Enforce DOD"
     optimistic: True
+    command_topic: b2500/esp32/enforce_dod/enabled/set
+    state_topic: b2500/esp32/enforce_dod/enabled
     #restore_mode: RESTORE_DEFAULT_ON
     #assumed_state: True
 
