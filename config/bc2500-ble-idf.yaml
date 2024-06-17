@@ -576,6 +576,8 @@ switch:
     id: switch_debug_hexdump
     name: "INTERNAL:DEBUG HEXDUMP"
     optimistic: True
+    command_topic: b2500/esp32/internal_hexdump/enabled/set
+    state_topic: b2500/esp32/internal_hexdump/enabled
     #assumed_state: True
 
   - platform: template
