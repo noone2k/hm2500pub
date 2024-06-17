@@ -265,6 +265,7 @@ button:
   - platform: template
     id: btn_device_1_reboot
     name: "D1-60: Reboot B2500"
+    command_topic: b2500/1/device/device_reboot/set
     on_press:
       then:
         - script.execute: 
@@ -277,6 +278,7 @@ button:
   - platform: template
     id: btn_device_2_reboot
     name: "D2-60: Reboot B2500"
+    command_topic: b2500/2/device/device_reboot/set
     on_press:
       then:
         - script.execute: 
