@@ -260,6 +260,7 @@ button:
   - platform: restart
     id: controller_restart
     name: "Restart Controller"
+    command_topic: b2500/esp32/reboot/set
 
   - platform: template
     id: btn_device_1_reboot
