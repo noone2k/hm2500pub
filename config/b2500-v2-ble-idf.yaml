@@ -1436,10 +1436,12 @@ script:
 #         ( see note in top of doc )
 #
 #         new 1.60
-#         = 0x11  00 - enable adaptiv ????
+#         = 0x11  00 - enable adaptiv
 #         = 0x12  set timers
 #         = 0x13  get timers
 #
+#         new 212.18
+#         = 0x21  01  - reset to original mqtt ( amazon/hametech - app/remote )
 #
 # data    = xx xx xx xx xx xx .... / depends on cmd
 # crc     = xor len(paket) - 1 
