@@ -2758,7 +2758,7 @@ script:
             ESP_LOGI("timer" , "1: %i: %02i:%02i - %02i:%02i ( %3i W )", x[5], x[6],x[7],x[8],x[9],(x[11] << 8) | x[10]);
             ESP_LOGI("timer" , "2: %i: %02i:%02i - %02i:%02i ( %3i W )", x[12], x[13],x[14],x[15],x[16],(x[18] << 8) | x[17]);
             ESP_LOGI("timer" , "3: %i: %02i:%02i - %02i:%02i ( %3i W )", x[19], x[20],x[21],x[22],x[23],(x[25] << 8) | x[24]);
-            ESP_LOGI("timer" , "adaptiv: %i - Abtastrate: %03i - %03i - %03i ( %03i s  )", x[26], x[27],x[28],(x[30] << 8) | x[29],(x[32] << 8) | x[31]);
+            ESP_LOGI("timer" , "adaptiv: %i - Entladeleistung: %03i - CT001: %03i ( %03i s )", x[26],(x[28] << 8) | x[27],(x[30] << 8) | x[29],(x[32] << 8) | x[31]);
             for (int i=5;i<26;i++) {
               id(tmp_timers_1)[i-5] = x[i];
             }
@@ -2802,7 +2802,17 @@ script:
             snprintf(mtopic, 48,"b2500v2/%i/smartmeter/value",ble_device_nr);
             snprintf(mvalue, 48,"Abtastrate: %03i - %03i - %03i ( %03i s )",  x[27],x[28],(x[30] << 8) | x[29],(x[32] << 8) | x[31]);
             id(mqtt_client).publish(mtopic,to_string(mvalue));
-            
+
+            snprintf(mtopic, 48,"b2500v2/%i/smartmeter/power_out",ble_device_nr);
+            mpower = (x[28] << 8) | x[27];
+            id(mqtt_client).publish(mtopic,to_string(mpower));
+            snprintf(mtopic, 48,"b2500v2/%i/smartmeter/power_metered",ble_device_nr);
+            mpower = (x[30] << 8) | x[29];
+            id(mqtt_client).publish(mtopic,to_string(mpower));
+            snprintf(mtopic, 48,"b2500v2/%i/smartmeter/power_time",ble_device_nr);
+            mpower = (x[32] << 8) | x[31];
+            id(mqtt_client).publish(mtopic,to_string(mpower));
+
           }
           else if (x[3] == 0x01) {
             ESP_LOGD("main", "Data: cmd 0x01");
