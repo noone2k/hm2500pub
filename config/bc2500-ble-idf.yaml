@@ -1873,7 +1873,6 @@ script:
 
             snprintf(mtopic, 48,"b2500/%i/battery/cells/sum/cmin",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(cmin/1000));
-
             snprintf(mtopic, 48,"b2500/%i/battery/cells/sum/cmax",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(cmax/1000));
             snprintf(mtopic, 48,"b2500/%i/battery/cells/sum/cavg",ble_device_nr);
@@ -1887,6 +1886,27 @@ script:
             id(mqtt_client).publish(mtopic,to_string(t1));
             snprintf(mtopic, 48,"b2500/%i/battery/temp2",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(t2));
+
+            // disable output if cmin drops to lower 3.1V ( make a setting )
+            if ( std::isless(cmin,3100) ) { 
+              bool do_fix_01=false;
+              if (ble_device_nr == 1 && ( id(switch_powerout_1_1).state == true || id(switch_powerout_1_2).state ==true) ) { do_fix_01 = true ; }
+              if (ble_device_nr == 2 && ( id(switch_powerout_2_1).state == true || id(switch_powerout_2_2).state ==true) ) { do_fix_01 = true ; }
+              if ( do_fix_01==true) {
+                ESP_LOGI("BMS - fix","Min Voltage (%i) : %f - power off",ble_device_nr, cmin) ;
+                id(ble_command_simple).execute(ble_device_nr,0x0E,0x00); 
+              }
+            }
+            // prepare passthrough if cmax reach 3.55V ( make a setting )
+            if ( std::isgreater(cmax,3550) ) {
+              bool do_fix_02=false;
+              if (ble_device_nr == 1 && ( id(switch_powerout_1_1).state == true || id(switch_powerout_1_2).state ==true) ) { do_fix_02 = true ; }
+              if (ble_device_nr == 2 && ( id(switch_powerout_2_1).state == true || id(switch_powerout_2_2).state ==true) ) { do_fix_02 = true ; }
+              if ( do_fix_02==true) {
+                ESP_LOGI("BMS - fix","Max Voltage (%i) : %f - prepare passthrough",ble_device_nr, cmax) ;
+                id(ble_command_simple).execute(ble_device_nr,0x0E,0x00);
+              }
+            }
 
            /*
             id(bcsoc).publish_state(soc);                                    // SOC from device (%)
