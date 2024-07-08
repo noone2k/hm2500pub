@@ -2285,18 +2285,16 @@ script:
                 id(ble_set_timer_enable).execute(ble_device_nr,0,0);
               }
             }
-            /* only for v1 - v2 rework with timer - check if needed ;) 
-            // prepare passthrough if cmax reach 3.55V ( make a setting )
+            // prepare passthrough if cmax reach 3.55V - v1 rework for v2
             if ( std::isgreater(cmax,3550) ) {
               bool do_fix_02=false;
-              if (ble_device_nr == 1 && ( id(switch_powerout_1_1).state == true || id(switch_powerout_1_2).state ==true) ) { do_fix_02 = true ; }
-              if (ble_device_nr == 2 && ( id(switch_powerout_2_1).state == true || id(switch_powerout_2_2).state ==true) ) { do_fix_02 = true ; }
+              if (ble_device_nr == 1 && ( id(tmp_timers_1)[0]  == 1 || id(tmp_timers_1)[7]  == 1 || id(tmp_timers_1)[14]  == 1 ) ) { do_fix_02 = true ; }
+              if (ble_device_nr == 2 && ( id(tmp_timers_2)[0]  == 1 || id(tmp_timers_2)[7]  == 1 || id(tmp_timers_2)[14]  == 1 ) ) { do_fix_02 = true ; }
               if ( do_fix_02==true) {
                 ESP_LOGI("BMS - fix","Max Voltage (%i) : %f - prepare passthrough",ble_device_nr, cmax) ;
-                id(ble_command_simple).execute(ble_device_nr,0x0E,0x00);
+                id(ble_set_timer_enable).execute(ble_device_nr,0,0);
               }
             }
-            */
 
 
             snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/cmax",ble_device_nr);
