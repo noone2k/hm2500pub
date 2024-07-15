@@ -58,8 +58,11 @@ HW Version 2 ( HMA-X ) :  b2500-v2-ble-idf.yaml
 
 **3rd party links/tools/helpers/etc. **
 
-- HA-Version ( npw2500 ) by neromatrix
+- HA-Version for V1 ( npw2500 ) by neromatrix
   * https://gist.github.com/neromatrix/6ec812f35418c4b38ebbad4e92cac888
 
 - Online Generator for YAML by tomquist ( upto 3 devices )
   * https://tomquist.github.io/esphome-b2500/
+
+- Smartmeter Emulator by tomquist
+  * https://github.com/tomquist/b2500-meter
