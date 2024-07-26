@@ -2,7 +2,7 @@ alias: B2500 - Received Data
 description: ""
 trigger:
   - platform: mqtt
-    topic: hame_energy/HMB-4/device/e88da6af01e1/ctrl
+    topic: hame_energy/<DEVICE_TYPE/device/<DEVICE_MAC>/ctrl
 condition: []
 action:
   - service: python_script.b2500_parse_respond

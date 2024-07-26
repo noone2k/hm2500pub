@@ -8,7 +8,7 @@ action:
   - service: mqtt.publish
     data:
       qos: "0"
-      topic: hame_energy/HMB-4/App/e88da6af01e1/ctrl
+      topic: hame_energy/<DEVICE_TYPE>/App/<DEVICE_MAC>/ctrl
       payload: cd=01
 mode: single
 
