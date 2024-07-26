@@ -1,0 +1,14 @@
+alias: B2500 - Request Data
+description: ""
+trigger:
+  - platform: time_pattern
+    seconds: /5
+condition: []
+action:
+  - service: mqtt.publish
+    data:
+      qos: "0"
+      topic: hame_energy/HMB-4/App/e88da6af01e1/ctrl
+      payload: cd=01
+mode: single
+
