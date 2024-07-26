@@ -55,6 +55,15 @@ shorts_diz[sg]="Sensor connected "
 shorts_diz[sp]="Sensor Range ?   "
 shorts_diz[st]="Sensor Value     "
 
+### V2 ~ fw 215
+shorts_diz[id]="ID ???           "
+shorts_diz[a0]="Powerpack 0 % ???"
+shorts_diz[a1]="Powerpack 1 % ???"
+shorts_diz[a2]="Powerpack 2 % ???"
+shorts_diz[l0]="Load State 0 ??? "
+shorts_diz[l1]="Load State 1 ??? "
+shorts_diz[sv]="SV ???           "
+
 break_loop=0
 m_array=()
 OLD_IFS=$IFS
