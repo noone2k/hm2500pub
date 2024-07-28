@@ -8,5 +8,5 @@ action:
   - service: python_script.b2500_parse_respond
     data:
       message: "{{ trigger.payload }}"
+      topic: " {{ trigger.topic }}"
 mode: single
-
