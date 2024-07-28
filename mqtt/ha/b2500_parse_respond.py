@@ -1,4 +1,5 @@
 message = data.get("message")
+topic = data.get("topic")
 
 # short_diz
 shortDiz = {
@@ -52,20 +53,58 @@ shortDiz = {
 "sv": "SV",
 "w3": "Solar Gesamt",
 "g3": "Ausgangsleistung gesamt",
-"last": "Timestamp"
+"last": "Timestamp",
+"type": "Geräte-Type",
+"mac": "BLE Mac"
 }
 
+# extract type and mac from topic
+dev_type_mac = topic.split("/")
+dev_type = dev_type_mac[1]
+dev_mac = dev_type_mac[3]
 
-
-# create dict from message
+# create dict from message/topic
 b2500_dict = {}
 val_keys = message.split(",")
 for vk in val_keys:
     x = vk.split("=")
     b2500_dict[x[0]] = x[1]
+# add type and mac to dict
+b2500_dict["type"] = dev_type
+b2500_dict["mac"] = dev_mac
+# calc and add w3 / g3
+b2500_dict["w3"] = int(b2500_dict["w1"]) + int(b2500_dict["w2"])
+b2500_dict["g3"] = int(b2500_dict["g1"]) + int(b2500_dict["g2"])
 
-# log output - only for testing
+
+# function to create/update items
+def items_update(itemX,value):
+    #logger.info("itemX: {} - diz: {} - value: {}".format(itemX , shortDiz[itemX], value))
+
+    if itemX == "o1" or itemX == "o2" or itemX == "b1" or itemX == "b2" or itemX == "p1" or itemX == "p2":
+        inputEntity = "binary_sensor.b2500_" + dev_mac + "_" + itemX
+    else:
+        inputEntity = "sensor.b2500_" + dev_mac + "_" + itemX
+
+    inputStateObject = hass.states.get(inputEntity)
+    if not inputStateObject is None:
+        inputState = inputStateObject.state
+        inputAttributesObject = inputStateObject.attributes.copy()
+        if inputAttributesObject["state"] != value:
+            inputAttributesObject["state"] = value
+    else:
+        logger.info("inputEntity: {} - : not found - create".format(inputEntity))
+        inputState = value
+        inputAttributesObject = {}
+        inputAttributesObject["state"] = value
+        inputAttributesObject["friendly_name"] = shortDiz[x]
+        inputAttributesObject["unique_id"] = inputEntity
+
+    hass.states.set(inputEntity, value, inputAttributesObject)
+
+
+# update/create items
 for x in b2500_dict:
-    logger.info("{} - {} : {}".format(x , shortDiz[x], b2500_dict[x]))
+    #logger.info("{} - {} : {}".format(x , shortDiz[x], b2500_dict[x]))
+    items_update(x,b2500_dict[x])
 
-# hass.states.set(entity_id, 'state', attributes)

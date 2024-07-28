@@ -1,9 +1,8 @@
 # home assistent example script
 
-dieses python_script parsed the antwort und splitted diese auf.
-hier fehlt jetzt nur noch das update/create der entities.
+dieses python_script parsed the antwort und splitted diese auf
+und fügt automatisch die entititäten hinzu und updated diese.
 
-sollte den einstieg aber erleichtern.
 
 vorraussetzung:
 HA mit aktivierten python_script und wenn man zum testen loggen will,
