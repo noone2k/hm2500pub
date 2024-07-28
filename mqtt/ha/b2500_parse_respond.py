@@ -20,8 +20,8 @@ shortDiz = {
 "kn": "Batteriekapazität",
 "g1": "Ausgangsleistung 1",
 "g2": "Ausgangsleistung 2",
-"b1": "Ist Power Pack 1 verbunden",
-"b2": "Ist Power Pack 2 verbunden",
+"b1": "Power Pack 1 verbunden",
+"b2": "Power Pack 2 verbunden",
 "md": "Entlademodus-Einstellung",
 "d1": "Zeit 1 Aktivierungsstatus",
 "e1": "Zeit 1 Startzeit",
@@ -72,7 +72,24 @@ valunits = {
 "do": "%",
 }
 
-
+valclass = {
+"w1": "power",
+"w2": "power",
+"w3": "power",
+"g1": "power",
+"g2": "power",
+"g3": "power",
+"pe": "battery",
+"kn": "energy",
+"tl": "temperature",
+"th": "temperature",
+"p1": "power",
+"p2": "power",
+"o1": "power",
+"o2": "power",
+"b1": "power",
+"b2": "power",
+}
 
 # extract type and mac from topic
 dev_type_mac = topic.split("/")
@@ -95,7 +112,7 @@ b2500_dict["g3"] = int(b2500_dict["g1"]) + int(b2500_dict["g2"])
 
 # function to create/update items
 def items_update(itemX,value):
-    #logger.info("itemX: {} - diz: {} - value: {}".format(itemX , shortDiz[itemX], value))
+#    logger.info("itemX: {} - diz: {} - value: {}".format(itemX , shortDiz[itemX], value))
 
     if itemX == "o1" or itemX == "o2" or itemX == "b1" or itemX == "b2" or itemX == "p1" or itemX == "p2":
         inputEntity = "binary_sensor.b2500_" + dev_mac + "_" + itemX
@@ -114,7 +131,9 @@ def items_update(itemX,value):
         inputAttributesObject = {}
         inputAttributesObject["state"] = value
         inputAttributesObject["friendly_name"] = shortDiz[x]
-        inputAttributesObject["unique_id"] = inputEntity
+        inputAttributesObject["unique_id"] = inputEntity # doesnt work this way ... still keep it
+        if x in valclass:
+            inputAttributesObject["device_class"] = valclass[x]
         if x in valunits:
             inputAttributesObject["unit_of_measurement"] = valunits[x]
 
