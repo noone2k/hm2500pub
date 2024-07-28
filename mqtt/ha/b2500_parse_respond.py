@@ -58,6 +58,22 @@ shortDiz = {
 "mac": "BLE Mac"
 }
 
+valunits = {
+"w1": "W",
+"w2": "W",
+"w3": "W",
+"g1": "W",
+"g2": "W",
+"g3": "W",
+"pe": "%",
+"kn": "kWh",
+"tl": "°C",
+"th": "°C",
+"do": "%",
+}
+
+
+
 # extract type and mac from topic
 dev_type_mac = topic.split("/")
 dev_type = dev_type_mac[1]
@@ -99,6 +115,8 @@ def items_update(itemX,value):
         inputAttributesObject["state"] = value
         inputAttributesObject["friendly_name"] = shortDiz[x]
         inputAttributesObject["unique_id"] = inputEntity
+        if x in valunits:
+            inputAttributesObject["unit_of_measurement"] = valunits[x]
 
     hass.states.set(inputEntity, value, inputAttributesObject)
 
