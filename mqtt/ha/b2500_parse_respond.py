@@ -1,94 +1,61 @@
 message = data.get("message")
 topic = data.get("topic")
 
-# short_diz
-shortDiz = {
-"p1": "Solar-Eingangsstatus 1",
-"p2": "Solar-Eingangsstatus 2",
-"w1": "Solar-Eingangsleistung 1",
-"w2": "Solar-Eingangsleistung 2",
-"pe": "Batterieprozentsatz",
-"vv": "Geräteversionsnummer",
-"cs": "Ladeeinstellungen",
-"cd": "Entladeeinstellungen",
-"am": "AM",
-"o1": "Ausgangszustand 1",
-"o2": "Ausgangszustand 2",
-"do": "Entladetiefe (DoD)",
-"lv": "Batterieentladeschwelle",
-"cj": "Szene",
-"kn": "Batteriekapazität",
-"g1": "Ausgangsleistung 1",
-"g2": "Ausgangsleistung 2",
-"b1": "Power Pack 1 verbunden",
-"b2": "Power Pack 2 verbunden",
-"md": "Entlademodus-Einstellung",
-"d1": "Zeit 1 Aktivierungsstatus",
-"e1": "Zeit 1 Startzeit",
-"f1": "Zeit 1 Endzeit",
-"h1": "Zeit 1 Ausgangswert",
-"d2": "Zeit 2 Aktivierungsstatus",
-"e2": "Zeit 2 Startzeit",
-"f2": "Zeit 2 Endzeit",
-"h2": "Zeit 2 Ausgangswert",
-"d3": "Zeit 3 Aktivierungsstatus",
-"e3": "Zeit 3 Startzeit",
-"f3": "Zeit 3 Endzeit",
-"h3": "Zeit 3 Ausgangswert",
-"sg": "Ist der Sensor verbunden",
-"sp": "Automatische Leistungsgröße des Monitors",
-"st": "Vom Monitor übertragene Leistung",
-"tl": "Mindesttemperatur der Batteriezellen",
-"th": "Höchsttemperatur der Batteriezellen",
-"tc": "Ladetemperaturalarm",
-"tf": "Entladetemperaturalarm",
-"ts": "WiFi-Signalerkennung",
-"fc": "Chip FC4 Versionsnummer",
-"id": "ID",
-"a0": "A0",
-"a1": "A1",
-"a2": "A2",
-"l0": "L0",
-"l1": "L1",
-"sv": "SV",
-"w3": "Solar Gesamt",
-"g3": "Ausgangsleistung gesamt",
-"last": "Timestamp",
-"type": "Geräte-Type",
-"mac": "BLE Mac"
-}
-
-valunits = {
-"w1": "W",
-"w2": "W",
-"w3": "W",
-"g1": "W",
-"g2": "W",
-"g3": "W",
-"pe": "%",
-"kn": "kWh",
-"tl": "°C",
-"th": "°C",
-"do": "%",
-}
-
-valclass = {
-"w1": "power",
-"w2": "power",
-"w3": "power",
-"g1": "power",
-"g2": "power",
-"g3": "power",
-"pe": "battery",
-"kn": "energy",
-"tl": "temperature",
-"th": "temperature",
-"p1": "power",
-"p2": "power",
-"o1": "power",
-"o2": "power",
-"b1": "power",
-"b2": "power",
+# short : [ diz, class, unit ]
+entityDiz = {
+        "p1": [ "Solar-Eingangsstatus 1", "power", None ],
+        "p2": [ "Solar-Eingangsstatus 2", "power", None ],
+        "w1": [ "Solar-Eingangsleistung 1", "power", "W" ],
+        "w2": [ "Solar-Eingangsleistung 2", "power", "W" ],
+        "pe": [ "Batterieprozentsatz", "battery", "%" ],
+        "vv": [ "Geräteversionsnummer", None, None ],
+        "cs": [ "Ladeeinstellungen", None, None ],
+        "cd": [ "Entladeeinstellungen", None, None ],
+        "am": [ "AM", None, None ],
+        "o1": [ "Ausgangszustand 1", "power", None ],
+        "o2": [ "Ausgangszustand 2", "power", None ],
+        "do": [ "Entladetiefe (DoD)", None, "%" ],
+        "lv": [ "Batterieentladeschwelle", None, None ],
+        "cj": [ "Szene", None, None ],
+        "kn": [ "Batteriekapazität", "energy", "kWh" ],
+        "g1": [ "Ausgangsleistung 1", "power", "W" ],
+        "g2": [ "Ausgangsleistung 2", "power", "W" ],
+        "b1": [ "Power Pack 1 verbunden", "power", None ],
+        "b2": [ "Power Pack 2 verbunden", "power", None ],
+        "md": [ "Entlademodus-Einstellung", None, None ],
+        "d1": [ "Zeit 1 Aktivierungsstatus", None, None ],
+        "e1": [ "Zeit 1 Startzeit", None, None ],
+        "f1": [ "Zeit 1 Endzeit", None, None ],
+        "h1": [ "Zeit 1 Ausgangswert", "power", "W" ],
+        "d2": [ "Zeit 2 Aktivierungsstatus", None, None ],
+        "e2": [ "Zeit 2 Startzeit", None, None ],
+        "f2": [ "Zeit 2 Endzeit", None, None ],
+        "h2": [ "Zeit 2 Ausgangswert", "power", "W" ],
+        "d3": [ "Zeit 3 Aktivierungsstatus", None, None ],
+        "e3": [ "Zeit 3 Startzeit", None, None ],
+        "f3": [ "Zeit 3 Endzeit", None, None ],
+        "h3": [ "Zeit 3 Ausgangswert", "power", "W" ],
+        "sg": [ "Monitor verbunden", None, None ],
+        "sp": [ "Monitor Ausgangsleistung",  "power", "W" ],
+        "st": [ "Monitor gemessene Leistung", "power" ,"W" ],
+        "tl": [ "Mindesttemperatur der Batteriezellen",  "temperatur", "°C" ],
+        "th": [ "Höchsttemperatur der Batteriezellen",  "temperatur", "°C" ],
+        "tc": [ "Ladetemperaturalarm",  None, None ],
+        "tf": [ "Entladetemperaturalarm", None, None ],
+        "ts": [ "WiFi-Signalerkennung", None, None ],
+        "fc": [ "Chip FC4 Versionsnummer", None, None ],
+        "id": [ "ID", None, None ],
+        "a0": [ "Kapazität intern", "battery", "%" ],
+        "a1": [ "Kapazität Powerpack 1", "battery","%" ],
+        "a2": [ "Kapazität Powerpack 2", "battery","%" ],
+        "l0": [ "L0", None, None ],
+        "l1": [ "L1", None, None ],
+        "sv": [ "SV", None, None ],
+        "w3": [ "Solar Gesamt", "power", "W" ],
+        "g3": [ "Ausgangsleistung gesamt", "power", "W" ],
+        "last": [ "Timestamp", None, None ],
+        "type": [ "Geräte-Typ", None, None ],
+        "mac": [ "BLE Mac", None, None ],
 }
 
 # extract type and mac from topic
@@ -114,7 +81,7 @@ b2500_dict["g3"] = int(b2500_dict["g1"]) + int(b2500_dict["g2"])
 def items_update(itemX,value):
 #    logger.info("itemX: {} - diz: {} - value: {}".format(itemX , shortDiz[itemX], value))
 
-    if itemX == "o1" or itemX == "o2" or itemX == "b1" or itemX == "b2" or itemX == "p1" or itemX == "p2":
+    if itemX == "o1" or itemX=="o2" or itemX=="b1" or itemX=="b2" or itemX=="p1" or itemX=="p2" or itemX=="sg" or itemX=="d1" or itemX=="d2" or itemX=="d3":
         inputEntity = "binary_sensor.b2500_" + dev_mac + "_" + itemX
     else:
         inputEntity = "sensor.b2500_" + dev_mac + "_" + itemX
@@ -130,12 +97,14 @@ def items_update(itemX,value):
         inputState = value
         inputAttributesObject = {}
         inputAttributesObject["state"] = value
-        inputAttributesObject["friendly_name"] = shortDiz[x]
         inputAttributesObject["unique_id"] = inputEntity # doesnt work this way ... still keep it
-        if x in valclass:
-            inputAttributesObject["device_class"] = valclass[x]
-        if x in valunits:
-            inputAttributesObject["unit_of_measurement"] = valunits[x]
+
+        if itemX in entityDiz:
+            inputAttributesObject["friendly_name"] = entityDiz[itemX][0]
+            if not entityDiz[itemX][1] is None:
+                inputAttributesObject["device_class"] = entityDiz[itemX][1]
+            if not entityDiz[itemX][2] is None:
+                inputAttributesObject["unit_of_measurement"] = entityDiz[itemX][2]
 
     hass.states.set(inputEntity, value, inputAttributesObject)
 
