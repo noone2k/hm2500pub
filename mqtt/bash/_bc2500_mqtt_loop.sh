@@ -56,13 +56,31 @@ shorts_diz[sp]="Sensor Range ?   "
 shorts_diz[st]="Sensor Value     "
 
 ### V2 ~ fw 215
-shorts_diz[id]="ID ???           "
-shorts_diz[a0]="Powerpack 0 % ???"
-shorts_diz[a1]="Powerpack 1 % ???"
-shorts_diz[a2]="Powerpack 2 % ???"
-shorts_diz[l0]="Load State 0 ??? "
-shorts_diz[l1]="Load State 1 ??? "
-shorts_diz[sv]="SV ???           "
+shorts_diz[id]="ID               "
+shorts_diz[a0]="Powerpack 0 %    "
+shorts_diz[a1]="Powerpack 1 %    "
+shorts_diz[a2]="Powerpack 2 %    "
+shorts_diz[l0]="Load State 0     "
+shorts_diz[l1]="Load State 1     "
+shorts_diz[sv]="Device Subversion"
+
+### V2 ~ fw 216
+shorts_diz[c0]="C0 ???           "
+shorts_diz[c1]="C1 ???           "
+
+### V2 ~ fw 216 - split 15
+shorts_diz[ws]="WS ???           "
+shorts_diz[r3]="R3 ???           "
+shorts_diz[r4]="R4 ???           "
+shorts_diz[r5]="R5 ???           "
+### V2 ~ fw 216 - split 16
+shorts_diz[m1]="M1 ???           "
+shorts_diz[m2]="M2 ???           "
+shorts_diz[i1]="I1 ???           "
+shorts_diz[i2]="I2 ???           "
+shorts_diz[e1_]="E1 ???           "
+shorts_diz[e2_]="E2 ???           "
+
 
 break_loop=0
 m_array=()
@@ -70,16 +88,34 @@ OLD_IFS=$IFS
 IFS=','
 
 while [ $break_loop != 1 ]; do
-	ANSWER=`mosquitto_sub -C 1 -h $HOST -t $TOPIC_SUB`
-	read -ra m_array <<< "$ANSWER"
-	echo "- " $ANSWER
-	for i in "${m_array[@]}"; do
-	    short=`echo $i | sed -e 's/=.*//'`
-	    value=`echo $i | sed -e 's/.*=//'`
-	    echo -e "$short - ${shorts_diz[$short]} : $value"
-	done
-	echo "----------- done -----------"
-	[ "$ANSWER" == "exit" ] && break_loop=1
+        ANSWER=`mosquitto_sub -C 1 -h $HOST -t $TOPIC_SUB`
+        [ ${#ANSWER} -le 100 ] && DIZ_=1
+        read -ra m_array <<< "$ANSWER"
+        echo "- " $ANSWER " ( ${#ANSWER} )"
+
+        if [[ $ANSWER == a0* ]]; then
+                echo "Zellinfos"
+                for i in "${m_array[@]}"; do
+                    short=`echo $i | sed -e 's/=.*//'`
+                    [[ $short == a* ]] && short="${short/a/"intern "}"
+                    [[ $short == b* ]] && short="${short/b/"extra1 "}"
+                    [[ $short == c* ]] && short="${short/c/"extra2 "}"
+                    value=`echo $i | sed -e 's/.*=//'`
+                    echo -e "$short : $value"
+                done
+        else
+                DIZ_=0
+                for i in "${m_array[@]}"; do
+                    short=`echo $i | sed -e 's/=.*//'`
+                    value=`echo $i | sed -e 's/.*=//'`
+                    DIZ=${shorts_diz[$short]}
+                    [ $DIZ_ -eq 1 ] && [ "$short" == "e1" ] && DIZ=${shorts_diz[$short"_"]}
+                    [ $DIZ_ -eq 1 ] && [ "$short" == "e2" ] && DIZ=${shorts_diz[$short"_"]}
+                    echo -e "$short - $DIZ : $value"
+                done
+        fi
+        echo "----------- done -----------"
+        [ "$ANSWER" == "exit" ] && break_loop=1
 done
 
 IFS=$OLD_IFS

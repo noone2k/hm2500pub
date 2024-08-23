@@ -1,0 +1,286 @@
+1. How to read the device information 
+2. Charging mode setting(Flash storage) 
+3. Discharge mode setting(Flash storage) 
+4. Discharge depth setting(Flash storage) 
+5. Start battery output threshold 
+6. Timed and fixed power discharge settings(Flash storage) 
+7. Synchronization time setting 
+8. Time zone setting(Flash storage) 
+9. Software restart 
+10. Restore factory settings 
+
+11. Charging mode setting(No flash storage) 
+12. Discharge mode setting(No flash storage) 
+13. Discharge depth setting(No flash storage) 
+14. Timed and fixed power discharge settings(No flash storage)
+
+
+1. How to read the device information
+
+1.1 Subscribe
+
+	Topic: hame_energy/HMB-4/device/replaceMe/ctrl/#
+
+	Payload: p1=0,p2=0,w1=0,w2=0,pe-99,vv=160,cs=1,cd=0,am=0,o1=1,02=1,do=2,1v=200,cj=1,kn=4412,g1=96,g2=99,b1=1,b2=0,md=0,d1=1,e1=0:0,f1=24:0,h1=200,d2=0,e2=0:0,2=0:0,h2=0,d3=0,e3=0:0f3=0:0,h3=0,sg=0,sp=100,st=0,t1=26,th=28,tc=0,t=0,c=202303012046
+
+	Solar input status 1 	p1
+	Solar input status 2 	p2
+	Solar 1 input power 	w1
+	Solar 2 input power 	w2
+	Battery percentage 	pe
+	Device version number 	vv
+	Charging settings 	cs
+	Discharge settings 	cd
+	AM 	am
+	Output State 1 	o1
+	Output State 2 	o2
+	dod discharge depth 	do
+	Battery output threshold 	lv
+	Scene 	cj
+	Battery capacity 	kn
+	Output power 1 	g1
+	Output power 2 	g2
+	Is power pack 1 connected 	b1
+	Is power pack 2 connected 	b2
+	Discharge setting mode 	md
+
+	Time1 enable status 	d1
+	Time1 start time 	e1 8:12
+	Time1 end time 	f1 12:20
+	Time1 output value 	h1
+	Time2 enable status 	d2
+	Time2 start time 	e2 8:12
+	Time2 end time 	f2 12:20
+	Time2 output value 	h2
+	Time3 enable status 	d3
+	Time3 start time 	e3 8:12
+	Time3 end time 	f3 12:20
+	Time3 output value 	h3
+
+	Is the sensor connected 	sg
+	Automatic power size of the monitor 	sp
+	The power transmitted by the monitor 	st
+
+	Minimum temperature of battery cells 	tl
+	Maximum temperature of battery cells 	th
+	Charging temperature alarm 	tc
+	Discharge temperature alarm 	tf
+	Signal WiFi signal detection 	ts
+	Chip fc4 version number 	fc
+
+	Device ID
+	(212.17 and later versions) 	id
+
+	Host battery capacity
+	212.17 and later versions) 	a0
+
+	Extra 1 battery capacity
+	(212.17 and later versions) 	a1
+
+	Extra 2 battery capacity
+	(212.17 and later versions) 	a2
+
+	Host battery sign position
+	(212.17 and later versions) 	l0
+					(bit3:undervoltage,bit2:dod,bit1:charge,bit0:discharge)
+
+	Extra 1 and extra 2 battery sign position
+	(212.17 and later versions) 	l1
+					(Extra1:bit7:undervoltage,bit6:dod,bit5:charge,bit4:discharge)
+					(Extra2:bit3:undervoltage,bit2:dod,bit1:charge,bit0:discharge)
+
+1.2 Publish
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=01
+
+
+2. Charging mode setting(Flash storage)
+
+2.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	1. cd=03,md=0 - Charging and discharging simultaneously
+			2. cd=03,md=1 - Fully charged and then discharged
+
+	Note: It will be saved to flash
+
+
+3. Discharge mode setting(Flash storage)
+
+3.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	1. cd=04,md=0 - Disable OUT1&OUT2
+			2. cd=04,md=1 - Enable OUT1
+			3. cd=04,md=2 - Enable OUT2
+			4. cd=04,md=3 - Enable OUT1&OUT2
+
+			Note:
+			1. Only suitable for B2500 first generation, product is HMB- 
+			2. It will be saved to flash
+
+
+4. Discharge depth setting(Flash storage)
+
+4.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	cd=05,md=0 - md=0-100, For example, setting 95: cd=05, md=95
+
+			Note: It will be saved to flash
+
+
+5. Start battery output threshold
+
+5.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=06,md=0 - md=0-500, For example, setting 300: cd=06, md=300
+
+
+6. Timed and fixed power discharge settings(Flash storage)
+
+6.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	1. cd=07,md=0 - Set discharge for three periods of time
+				(1) First time period
+				cd=07,md=0,a1=1,b1=0:30,e1=6:30,v1=260,a2=0,b2=12:30,e2=20:30,v2=123,a3=0,b3=12:30,e3=20:30,v3=123
+				(2) Second time period
+				cd=07,md=0,a1=0,b1=0:30,e1=6:30,v1=260,a2=1,b2=12:30,e2=20:30,v2=340,a3=0,b3=12:30,e3=20:30,v3=123
+				(3) Third time period
+				cd=07,md=0,a1=0,b1=0:30,e1=6:30,v1=260,a2=0,b2=12:30,e2=20:30,v2=123,a3=1,b3=21:30,e3=23:30,v3=250
+			2. cd=07,md=1 - Automatically recognize based on the monitor
+
+	a1 	The first time period is the energy state, 0 represents off, 1 represents on
+	b1 	Start time of the first time period
+	e1 	End time of the first time period
+	v1 	Output port value for the first time period, The value range is [80,800]
+	a2 	The second time period is the energy state, 0 represents off, 1 represents on
+	b2 	Start time of the second time period
+	e2 	End time of the second time period
+	v2 	Output port value for the second time period, The value range is [80,800]
+	a3 	The third time period is the energy state, 0 represents off, 1 represents on
+	b3 	Start time of the third time period
+	e3 	End time of the third time period
+	v3 	Output port value for the third time period, The value range is [80,800]
+
+	Note:
+		1. Suitable for the second generation B2500, products are HMA -, HMF -, HMK- 2. 
+		It will be saved to flash
+
+
+7. Synchronization time setting
+
+7.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=08,wy=480,yy=123,mm=1,rr=2,hh=23,mn=56,ss=56
+
+			wy 	Time offset
+			yy 	Year, whose value is equal to the actual year minus 1900
+			mm 	Month (Starting from January, 0 represents January) - value range is [0,11]
+			rr 	Date - The value range is [1,31]
+			hh 	Hour - The value range is [0,23]
+			mn 	Minute - The value range is [0,59]
+			ss 	Second – The value range is [0,59]
+
+
+8. Time zone setting(Flash storage)
+
+8.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=09,wy=480
+
+	Note: It will be saved to flash
+
+
+9. Software restart
+
+9.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=10
+
+
+10. Restore factory settings
+
+10.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=11
+
+
+11. Charging mode setting(No flash storage)
+
+11.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	1. cd=17,md=0 - Charging and discharging simultaneously
+			2. cd=17,md=1 - Fully charged and then discharged
+
+	Note:
+		1.Effective version: 214.1 and later versions 
+		2.Do not save to flash
+
+
+12. Discharge mode setting(No flash storage)
+
+12.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	1. cd=18,md=0 - Disable OUT1&OUT2
+			2. cd=18,md=1 - Enable OUT1
+			3. cd=18,md=2 - Enable OUT2
+			4. cd=18,md=3 - Enable OUT1&OUT2
+	Note:
+		1.Only suitable for B2500 first generation, product is HMB- 
+		2.Effective version: 214.1 and later versions 
+		3.Do not save to flash
+
+
+13. Discharge depth setting(No flash storage)
+
+13.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: cd=19,md=0 - md=0-100, For example, setting 95: cd=05, md=95(Do not save to flash)
+
+	Note:
+		1.Effective version: 214.1 and later versions 
+		2.Do not save to flash
+
+
+14. Timed and fixed power discharge settings(No flash storage)
+
+14.1 Public
+
+	Topic: hame_energy/HMB-4/App/replaceMe/ctrl
+
+	Payload: 	1. cd=20,md=0 - Set discharge for three periods of time
+			(1) First time period
+			cd=20,md=0,a1=1,b1=0:30,e1=6:30,v1=260,a2=0,b2=12:30,e2=20:30,v2=123,a3=0,b3=12:30,e3=20:30,v3=123
+			(2) Second time period
+			cd=20,md=0,a1=0,b1=0:30,e1=6:30,v1=260,a2=1,b2=12:30,e2=20:30,v2=340,a3=0,b3=12:30,e3=20:30,v3=123
+			(3) Third time period
+			cd=20,md=0,a1=0,b1=0:30,e1=6:30,v1=260,a2=0,b2=12:30,e2=20:30,v2=123,a3=1,b3=21:30,e3=23:30,v3=250
+			2. cd=20,md=1 - Automatically recognize based on the monitor
+	Note:
+		1.The parameter settings are the same as cd=07 
+		2.Effective version: 214.1 and later versions 
+		3.Do not save to flash
