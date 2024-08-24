@@ -9,11 +9,11 @@ es sind keine vollständigen lösungen. bieten aber einstiegspunkte für weitere
 
 
 
-| system        | dir  |                                                            | author |
-|---------------|------|------------------------------------------------------------|--------|
-| bash          | bash | simple shell scripts                                       | me     |
-| openHab       | oh   | rule inline script (js) zum auslesen der werte             | me     |
-| HomeAssistent | ha   | yamls zum anfordern und python_script zum parsen der werte | me     |
+| system        | dir  |                                                            | 
+|---------------|------|------------------------------------------------------------|
+| bash          | bash | simple shell scripts                                       | 
+| openHab       | oh   | rule inline script (js) zum auslesen der werte             | 
+| HomeAssistent | ha   | yamls zum anfordern und python_script zum parsen der werte |
 
 
 
