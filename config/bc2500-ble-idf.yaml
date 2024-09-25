@@ -1,6 +1,8 @@
 esphome:
   name: bc2500-ble-idf
   friendly_name: bc2500-ble-idf
+  includes:
+    - b2500-v1-errorcodes.h
   on_boot:
     priority: -100
     then:

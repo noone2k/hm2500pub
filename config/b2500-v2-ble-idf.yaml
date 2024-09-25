@@ -3,6 +3,8 @@ esphome:
   friendly_name: b2500-v2-ble-idf
     #  platformio_options:
     #board_build.f_cpu: 160000000L
+  includes:
+    - b2500-v2-errorcodes.h
   on_boot:
     priority: -100
     then:
