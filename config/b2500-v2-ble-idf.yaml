@@ -2743,16 +2743,28 @@ script:
             ESP_LOGI("main", "Data: cmd 0x30");
             int data_len = x.size();
             ESP_LOGI("data 30 - raw" , "Device %i",ble_device_nr);
-            ESP_LOGI("data 30 - raw" , "0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[0], x[1], x[2], x[3]);
-            for(int i=4;i<data_len-1;i++) {
-              float data1 = x[i+1] | x[i+2] << 8 | x[i+3] << 10 | x[i+4] << 18;
-              float data2 = x[i+5] | x[i+6] << 8 | x[i+7] << 10 | x[i+8] << 18;
-              //ESP_LOGD("data 30 - raw" , "0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[i], x[i+1], x[i+2], x[i+3], x[i+4],x[i+5],x[i+6],x[i+7],x[i+8]);
-              ESP_LOGI("data 30 - raw" , "0x%.2x - %.f - %.f", x[i], data1,data2);
-              i += 8;
+            //ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+            for(int i=5;i<data_len-1;i++) {
+              long long int data1 = x[i+4] | x[i+3] << 8 | x[i+2] << 16 | x[i+1] << 24;
+              long long int data2 = x[i+8] | x[i+7] << 8 | x[i+6] << 16 | x[i+5] << 24;
+
+              const time_t time_c = (time_t)data1;
+              struct tm *time_tm = gmtime(&time_c);
+
+              char str_time[32];
+              strftime(str_time, sizeof(str_time), "%Y-%m-%d %H:%M:%S", time_tm);
+
+              std::string str_diz;
+              auto it = errorMap.find(x[i]);
+              if (it != errorMap.end()) {
+                str_diz = it->second;
+              } else {
+                str_diz = "unknown errorcode";
+              }
+              //ESP_LOGI("data 30 - raw" , "0x%.2x ( %d ) - %s ( %lld ) - %s : %lld", x[i], x[i], str_time, data1, str_diz.c_str(), data2);
+              //ESP_LOGI("data 30 - raw" , "0x%.2x ( %d ) - %s - %s : %lld", x[i], x[i], str_time, str_diz.c_str(), data2);
+              ESP_LOGI("data 30 - errorlog" , "%s - 0x%.2x ( %d ) - %s : %lld", str_time, x[i], x[i], str_diz.c_str(), data2);
             }
-            //if (ble_device_nr==1) { id(ble_1_wait_process) = 0; }
-            //if (ble_device_nr==2) { id(ble_2_wait_process) = 0; }
           }
           else if (x[3] == 0x13) {
             ESP_LOGI("main", "Data: cmd 0x13 (timer) - Device: %i",ble_device_nr );
