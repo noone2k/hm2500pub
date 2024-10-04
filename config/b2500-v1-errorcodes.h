@@ -1,16 +1,9 @@
-// errorLog struct - actually not used ...
-struct {
-  uint8_t code;
-  uint32_t date;
-  uint32_t data;
-} errorLog[128];
-
 /*
 collection of known errorcodes
 b2500-v1 ( fw 138+ )
 */
 
-std::map<int, std::string> errorMap = {
+std::map<int, std::string> errorMap1 = {
 	{ 0, "Device startup" },
 	{ 12, "Battery Overvoltage" },
 	{ 25, "Watchdog reset" },

@@ -2755,8 +2755,8 @@ script:
               strftime(str_time, sizeof(str_time), "%Y-%m-%d %H:%M:%S", time_tm);
 
               std::string str_diz;
-              auto it = errorMap.find(x[i]);
-              if (it != errorMap.end()) {
+              auto it = errorMap2.find(x[i]);
+              if (it != errorMap2.end()) {
                 str_diz = it->second;
               } else {
                 str_diz = "unknown errorcode";
