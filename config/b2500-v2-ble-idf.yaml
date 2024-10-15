@@ -170,14 +170,17 @@ globals:
   - id: internal_error_count
     type: int
     initial_value: '0'
+  - id: internal_error_count2
+    type: int
+    initial_value: '0'
 
   - id: tmp_timers_1
-    type: char[22]
-    initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
+    type: char[36]
+    initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
 
   - id: tmp_timers_2
-    type: char[22]
-    initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
+    type: char[36]
+    initial_value: "{0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0 }"
 
 
 esp32_ble:
@@ -220,6 +223,11 @@ ble_client:
         - text.set:
             id: txt_region_1
             value: ""
+        - delay: 250ms
+        - script.execute:
+            id: ble_set_time
+            ble_device_nr: 1
+        - script.wait: ble_set_time
               
 # set region
 #        - script.execute: 
@@ -304,11 +312,11 @@ ble_client:
 #            ble_cmd: 0x02
 #            ble_cmd_parm: 0x00
 #        - script.wait: ble_command_simple
-#        - delay: 250ms
-#        - script.execute: 
-#            id: ble_set_time
-#            ble_device_nr: 2
-#        - script.wait: ble_set_time
+        - delay: 250ms
+        - script.execute: 
+            id: ble_set_time
+            ble_device_nr: 1
+        - script.wait: ble_set_time
     on_disconnect:
       then:
         - binary_sensor.template.publish:
@@ -981,7 +989,6 @@ text:
     max_length: 30
     mode: text
 
-
 binary_sensor:
   - platform: template
     name: "D1-i01: PV 1 - Aktiv"
@@ -1438,12 +1445,18 @@ script:
 #         ( see note in top of doc )
 #
 #         new 1.60
-#         = 0x11  00 - enable adaptiv
+#         = 0x11  00 - enable adaptiv - set all in/out off ????
 #         = 0x12  set timers
 #         = 0x13  get timers
 #
 #         new 212.18
 #         = 0x21  01  - reset to original mqtt ( amazon/hametech - app/remote )
+#
+#         new 217.18
+#         = 0x2a  01    - ???
+#         = 0x2b  01    - ???
+#         = 0x2c  parms - ???
+#
 #
 # data    = xx xx xx xx xx xx .... / depends on cmd
 # crc     = xor len(paket) - 1 
@@ -1835,7 +1848,7 @@ script:
                   ### query FC41D_FW if empty and FW > 133
                   - if:
                       condition:
-                        - lambda: 'return (id(txt_A12_2).state == "" && id(sensor_device_version_2).state * 100 > 133);'
+                        - lambda: 'return (id(txt_A12_2).state == "" && id(sensor_device_version_2).state > 133);'
                       then:
                         #- delay: 250ms
                         - script.execute: 
@@ -1847,7 +1860,7 @@ script:
                   ### query SSID if empty, wifi connected and FW > 133
                   - if:
                       condition:
-                        - lambda: 'return (id(txt_A11_2).state == "" && id(sensor_device_version_2).state * 100 > 133 && id(bool_wifi_ok_2));'
+                        - lambda: 'return (id(txt_A11_2).state == "" && id(sensor_device_version_2).state > 133 && id(bool_wifi_ok_2));'
                       then:
                         #- delay: 250ms
                         - script.execute: 
@@ -1901,7 +1914,7 @@ script:
             ### query cmd0F if firmware > 1.55
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 155 && id(txt_A02_2).state != "");'
+                  - lambda: 'return (id(sensor_device_version_2).state > 155 && id(txt_A02_2).state != "");'
                 then:
                   - script.stop: ble_runtime_query0F
                   - script.execute: 
@@ -1918,7 +1931,7 @@ script:
             ### query cmd0F if firmware > 1.55
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_1).state * 100 > 155 && id(txt_A02_1).state != "");'
+                  - lambda: 'return (id(sensor_device_version_1).state > 155 && id(txt_A02_1).state != "");'
                 then:
                   - script.stop: ble_runtime_query13
                   - script.execute: 
@@ -1933,7 +1946,7 @@ script:
             ### query cmd0F if firmware > 1.55
             - if:
                 condition:
-                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 155 && id(txt_A02_2).state != "");'
+                  - lambda: 'return (id(sensor_device_version_2).state > 155 && id(txt_A02_2).state != "");'
                 then:
                   - script.stop: ble_runtime_query13
                   - script.execute: 
@@ -1966,7 +1979,7 @@ script:
 #            ### query cmd30 if firmware > 1.30
 #            - if:
 #                condition:
-#                  - lambda: 'return (id(sensor_device_version_2).state * 100 > 130 && id(txt_A02_2).state != "");'
+#                  - lambda: 'return (id(sensor_device_version_2).state > 130 && id(txt_A02_2).state != "");'
 #                then:
 #                  - script.stop: ble_runtime_query30
 #                  - script.execute: 
@@ -1993,6 +2006,7 @@ script:
       ble_device_nr: int
     then:
       - logger.log: 
+          level: INFO
           format: "runtime query 30 (errorlog ?): %i"
           args: [ 'ble_device_nr' ]      
       - script.execute: 
@@ -2029,6 +2043,44 @@ script:
           ble_cmd: 0x13
           ble_cmd_parm: 0x00
       - script.wait: ble_command_simple
+
+  - id: ble_set_time
+    parameters:
+      ble_device_nr: int
+    then:   
+      - logger.log:
+          format: "set time: %i"
+          args: [ 'ble_device_nr' ]
+      - if:
+          condition:
+            lambda: 'return (ble_device_nr == 1);'
+          then:
+            - ble_client.ble_write:
+                id: bc2500_1
+                service_uuid: 'ff00'
+                characteristic_uuid: 'ff01'
+                #service_uuid: 0000ff00-0000-1000-8000-00805f9b34fb
+                #characteristic_uuid: 0000ff01-0000-1000-8000-00805f9b34fb
+                value: !lambda |-
+                  std::vector<unsigned char> rdat1{ 0x73,0x0d,0x23,0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3c, 0x00 };
+
+                  auto time = id(sntp_time).now();
+                  rdat1.at(4) = time.year - 1900;
+                  rdat1.at(5) = time.month;
+                  rdat1.at(6) = time.day_of_month;
+                  rdat1.at(7) = time.hour;
+                  rdat1.at(8) = time.minute;
+                  rdat1.at(9) = time.second + 1;
+
+                  int rlen = rdat1.size();
+                  rdat1.at(1) = rlen+1;
+                  int rxor = 0;
+                  for (int i=0;i<rlen;i++) {
+                    rxor = rxor ^ rdat1[i];
+                  }
+                  rdat1.push_back(rxor);
+
+                  return rdat1;
 
   - id: ble_set_loadfirst
     parameters:
@@ -2114,10 +2166,22 @@ script:
           //              00 00 00 00 00 64 00
           //              00 00 00 00 00 00 00
           //              00 00 00 00 00 00 00    ??
+          //              00 00 00 00 00 00 00    218.x - 4 timer
+          //              00 00 00 00 00 00 00    218.x - 5 timer
+          //                                      XX
+          
+
 
           for (int i=0;i<21;i++) {
               rdat1.push_back((unsigned char)id(tmp_timers_1)[i]);              
           }
+          if (id(sensor_device_version_1).state >= 218 ) {
+            for (int i=21;i<35;i++) {
+              rdat1.push_back((unsigned char)id(tmp_timers_1)[i]);
+            }
+          }
+
+          
           rdat1.at(4) = 0;
           rdat1.at(11) = 0;
           rdat1.at(18) = 1;
@@ -2127,6 +2191,10 @@ script:
           rdat1.at(22) = 0;
           rdat1.at(23) = (power >> 0) & 0xFF;
           rdat1.at(24) = (power >> 8) & 0xFF;
+          if (id(sensor_device_version_1).state >= 218 ) {
+            rdat1.at(25) = 0;
+            rdat1.at(32) = 0;
+          }
           id(ble_command_raw_01).execute(ble_device_nr,rdat1);
 
   - id: ble_set_timer_enable
@@ -2149,10 +2217,20 @@ script:
           for (int i=0;i<21;i++) {
               rdat1.push_back((unsigned char)id(tmp_timers_1)[i]);
           }
+          if (id(sensor_device_version_1).state >= 218 ) {
+            for (int i=21;i<35;i++) {
+              rdat1.push_back((unsigned char)id(tmp_timers_1)[i]);
+            }
+          }
+          
           if ( timer == 0 ) { rdat1.at(4) = 0; rdat1.at(11) = 0; rdat1.at(18) = 0; }
           if ( timer == 1 ) { rdat1.at(4) = enable; rdat1.at(18) = 0; }
           if ( timer == 2 ) { rdat1.at(11) = enable; rdat1.at(18) = 0; }
           if ( timer == 3 ) { rdat1.at(4) = 0; rdat1.at(11) = 0; rdat1.at(18) = enable; }
+          if (id(sensor_device_version_1).state >= 218 ) {
+            if ( timer == 4 ) { rdat1.at(25) = enable; rdat1.at(18) = 0; }
+            if ( timer == 5 ) { rdat1.at(32) = enable; rdat1.at(18) = 0; }
+          }
           id(ble_command_raw_01).execute(ble_device_nr,rdat1);
 
   - id: ble_notify_parse_test
@@ -2201,6 +2279,7 @@ script:
 
           // reset error counter
           id(internal_error_count) = 0;
+          id(internal_error_count2) = 0;
 
           auto strTime = id(sntp_time).now().strftime("%d.%m.%Y %H:%M:%S");
           if (ble_device_nr==1) { id(txt_last_response_1).publish_state(strTime); }
@@ -2297,7 +2376,6 @@ script:
                 id(ble_set_timer_enable).execute(ble_device_nr,0,0);
               }
             }
-
 
             snprintf(mtopic, 48,"b2500v2/%i/battery/cells/sum/cmax",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(cmax/1000));
@@ -2400,8 +2478,13 @@ script:
                     0-255 ( ~ anzeige als /100 )
             */
             float dev_version = x[12];
-            if (ble_device_nr==1) { id(sensor_device_version_1).publish_state(dev_version / 100); }
-            if (ble_device_nr==2) { id(sensor_device_version_2).publish_state(dev_version / 100); }
+            // publish from cmd 0x04 since 218 ... todo else if empty ... and remove the division ;)
+            if (ble_device_nr==1) { 
+              if (id(sensor_device_version_1).state == 0) { id(sensor_device_version_1).publish_state(dev_version); }
+            }
+            if (ble_device_nr==2) {   
+              if (id(sensor_device_version_2).state == 0) { id(sensor_device_version_2).publish_state(dev_version); }
+            }            
 
             // Temperature Sensors 
             /*
@@ -2660,6 +2743,8 @@ script:
             //  ESP_LOGD("data", "%i", b);
             //}
             //  's<#?type=<5>,id=<24>,mac=<12>t'
+            //  'sJ#?type=<5>,id=<24>,mac=<12>,version=<5+> # since 218.x
+
             // ESP_LOGD("data", "%s", vType);
             int data_len = x.size();
 
@@ -2681,12 +2766,27 @@ script:
             }
             vMac[12] = 0x00;
 
-            ESP_LOGD("deviceInfo", "%i: %s [%s] %s", data_len,vType,vMac,vID);
+            unsigned char vVersion[8];
+            if ( data_len > 70 ) {
+              for (int i=68;i<data_len-1;i++) {
+                vVersion[i-68] = x[i];
+              }
+              vVersion[data_len-69] = 0x00;
+            }
+
+            ESP_LOGI("deviceInfo", "%i: %s [%s] %s - %s", data_len,vType,vMac,vID,vVersion);
             std::string sType(reinterpret_cast<char*>(vType));
             std::string sID(reinterpret_cast<char*>(vID));
             std::string sMac(reinterpret_cast<char*>(vMac));
-            if (ble_device_nr==1) { id(txt_A01_1).publish_state(sType); id(txt_A02_1).publish_state(sID); id(txt_A03_1).publish_state(sMac); }
-            if (ble_device_nr==2) { id(txt_A01_2).publish_state(sType); id(txt_A02_2).publish_state(sID); id(txt_A03_2).publish_state(sMac); }
+            std::string sVersion(reinterpret_cast<char*>(vVersion));
+            if (ble_device_nr==1) { 
+              id(txt_A01_1).publish_state(sType); id(txt_A02_1).publish_state(sID); id(txt_A03_1).publish_state(sMac); 
+              id(sensor_device_version_1).publish_state(std::stof(sVersion));
+            }
+            if (ble_device_nr==2) { 
+              id(txt_A01_2).publish_state(sType); id(txt_A02_2).publish_state(sID); id(txt_A03_2).publish_state(sMac); 
+              id(sensor_device_version_2).publish_state(std::stof(sVersion));
+            }
           }
 
           // get wifi info - "admin mode ?!?" only
@@ -2743,7 +2843,7 @@ script:
             ESP_LOGI("main", "Data: cmd 0x30");
             int data_len = x.size();
             ESP_LOGI("data 30 - raw" , "Device %i",ble_device_nr);
-            //ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
+            ESP_LOG_BUFFER_HEXDUMP("hexdump", &x[0], x.size(), ESP_LOG_ERROR);
             for(int i=5;i<data_len-1;i++) {
               long long int data1 = x[i+4] | x[i+3] << 8 | x[i+2] << 16 | x[i+1] << 24;
               long long int data2 = x[i+8] | x[i+7] << 8 | x[i+6] << 16 | x[i+5] << 24;
@@ -2752,19 +2852,22 @@ script:
               struct tm *time_tm = gmtime(&time_c);
 
               char str_time[32];
+              std::string str_diz;
               strftime(str_time, sizeof(str_time), "%Y-%m-%d %H:%M:%S", time_tm);
 
-              std::string str_diz;
               auto it = errorMap2.find(x[i]);
               if (it != errorMap2.end()) {
                 str_diz = it->second;
               } else {
                 str_diz = "unknown errorcode";
               }
-              //ESP_LOGI("data 30 - raw" , "0x%.2x ( %d ) - %s ( %lld ) - %s : %lld", x[i], x[i], str_time, data1, str_diz.c_str(), data2);
-              //ESP_LOGI("data 30 - raw" , "0x%.2x ( %d ) - %s - %s : %lld", x[i], x[i], str_time, str_diz.c_str(), data2);
-              ESP_LOGI("data 30 - errorlog" , "%s - 0x%.2x ( %d ) - %s : %lld", str_time, x[i], x[i], str_diz.c_str(), data2);
+
+              //ESP_LOGI("data 30 - raw" , "0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x - 0x%.2x 0x%.2x 0x%.2x 0x%.2x", x[i], x[i+1], x[i+2], x[i+3], x[i+4],x[i+5],x[i+6],x[i+7],x[i+8]);
+              ESP_LOGI("data 30 - raw" , "0x%.2x ( %d )  - %s ( %lld ) - %s : %lld", x[i], x[i], str_time, data1, str_diz.c_str(), data2);
+              i += 8;
             }
+            //if (ble_device_nr==1) { id(ble_1_wait_process) = 0; }
+            //if (ble_device_nr==2) { id(ble_2_wait_process) = 0; }
           }
           else if (x[3] == 0x13) {
             ESP_LOGI("main", "Data: cmd 0x13 (timer) - Device: %i",ble_device_nr );
@@ -2772,11 +2875,21 @@ script:
             ESP_LOGI("timer" , "1: %i: %02i:%02i - %02i:%02i ( %3i W )", x[5], x[6],x[7],x[8],x[9],(x[11] << 8) | x[10]);
             ESP_LOGI("timer" , "2: %i: %02i:%02i - %02i:%02i ( %3i W )", x[12], x[13],x[14],x[15],x[16],(x[18] << 8) | x[17]);
             ESP_LOGI("timer" , "3: %i: %02i:%02i - %02i:%02i ( %3i W )", x[19], x[20],x[21],x[22],x[23],(x[25] << 8) | x[24]);
+            if ( id(sensor_device_version_1).state >= 218 ) {
+              ESP_LOGI("timer" , "4: %i: %02i:%02i - %02i:%02i ( %3i W )", x[43], x[44],x[45],x[46],x[47],(x[49] << 8) | x[48]);
+              ESP_LOGI("timer" , "5: %i: %02i:%02i - %02i:%02i ( %3i W )", x[50], x[51],x[52],x[53],x[54],(x[56] << 8) | x[55]);
+            }
             ESP_LOGI("timer" , "adaptiv: %i - Entladeleistung: %03i - CT001: %03i ( %03i s )", x[26],(x[28] << 8) | x[27],(x[30] << 8) | x[29],(x[32] << 8) | x[31]);
+
+
             for (int i=5;i<26;i++) {
               id(tmp_timers_1)[i-5] = x[i];
             }
-
+            if (id(sensor_device_version_1).state >= 218 ) {
+              for (int i=43;i<57;i++) {
+                id(tmp_timers_1)[i-22] = x[i];
+              } 
+            }
             char mtopic[48]; 
             char mvalue[48]; 
             int mpower = 0;
@@ -2808,13 +2921,34 @@ script:
             snprintf(mtopic, 48,"b2500v2/%i/timer/3/power",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(mpower));
 
+            if (id(sensor_device_version_1).state >= 218 ) {
+              // timer 4
+              snprintf(mtopic, 48,"b2500v2/%i/timer/4/enabled",ble_device_nr);
+              id(mqtt_client).publish(mtopic,to_string(x[43]));
+              snprintf(mtopic, 48,"b2500v2/%i/timer/4/value",ble_device_nr);
+              snprintf(mvalue, 48,"%02i:%02i - %02i:%02i ( %3i W )",x[44],x[45],x[46],x[47],(x[49] << 8) | x[48]);
+              id(mqtt_client).publish(mtopic,to_string(mvalue));
+              mpower = x[49] << 8 | x[48] ;
+              snprintf(mtopic, 48,"b2500v2/%i/timer/4/power",ble_device_nr);
+              id(mqtt_client).publish(mtopic,to_string(mpower));
+              // timer 5
+              snprintf(mtopic, 48,"b2500v2/%i/timer/5/enabled",ble_device_nr);
+              id(mqtt_client).publish(mtopic,to_string(x[50]));
+              snprintf(mtopic, 48,"b2500v2/%i/timer/5/value",ble_device_nr);
+              snprintf(mvalue, 48,"%02i:%02i - %02i:%02i ( %3i W )",x[51],x[52],x[53],x[54],(x[56] << 8) | x[55]);
+              id(mqtt_client).publish(mtopic,to_string(mvalue));
+              mpower = x[56] << 8 | x[55] ;
+              snprintf(mtopic, 48,"b2500v2/%i/timer/5/power",ble_device_nr);
+              id(mqtt_client).publish(mtopic,to_string(mpower));
+            }            
+
             // smartmeter
             snprintf(mtopic, 48,"b2500v2/%i/smartmeter/enabled",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(x[4]));
             snprintf(mtopic, 48,"b2500v2/%i/smartmeter/connected",ble_device_nr);
             id(mqtt_client).publish(mtopic,to_string(x[26]));
             snprintf(mtopic, 48,"b2500v2/%i/smartmeter/value",ble_device_nr);
-            snprintf(mvalue, 48,"Abtastrate: %03i - %03i - %03i ( %03i s )",  x[27],x[28],(x[30] << 8) | x[29],(x[32] << 8) | x[31]);
+            snprintf(mvalue, 48,"powerout: %03i - ct001: %03i ( %03i s )",  (x[28] << 8) | x[27],(x[30] << 8) | x[29],(x[32] << 8) | x[31]);
             id(mqtt_client).publish(mtopic,to_string(mvalue));
 
             snprintf(mtopic, 48,"b2500v2/%i/smartmeter/power_out",ble_device_nr);
@@ -2826,7 +2960,7 @@ script:
             snprintf(mtopic, 48,"b2500v2/%i/smartmeter/power_time",ble_device_nr);
             mpower = (x[32] << 8) | x[31];
             id(mqtt_client).publish(mtopic,to_string(mpower));
-
+            
           }
           else if (x[3] == 0x01) {
             ESP_LOGD("main", "Data: cmd 0x01");
