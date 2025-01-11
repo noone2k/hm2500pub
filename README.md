@@ -66,3 +66,7 @@ HW Version 2 ( HMA-X ) :  b2500-v2-ble-idf.yaml
 
 - Smartmeter Emulator by tomquist
   * https://github.com/tomquist/b2500-meter
+
+- FreeYourGadget / Java Implementation
+   * https://codeberg.org/Freeyourgadget/Gadgetbridge/src/branch/master/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/service/devices/marstek/MarstekB2500DeviceSupport.java
+
