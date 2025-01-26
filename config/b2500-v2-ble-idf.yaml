@@ -1419,7 +1419,7 @@ script:
 #
 #         new 1.31
 #         = 0x0F  new in fw 131 1Byte   ( 0x01 ) - soc_temp1_temp2_14-cell-voltage(s)
-#         = 0x30 found in logs ...      ( 0x01 ) - ???? unknown answers since fw 131
+#         = 0x30 found in logs ...      ( 0x01 ) - error/syslog - answers since fw 131
 #
 #         new 1.34
 #         = 0x09  SSID / SignalStrength ( 0x01 )
@@ -1438,7 +1438,7 @@ script:
 #                 note: leaving user/passwd empty works ...
 #
 #         unknown ...
-#         = 0x1e  unknown - error related ?!?!? (0x30)
+#         = 0x1e  unknown - error related ?!?!? (0x30) - is like 0x30 in previous - 30 == 0x1e
 #
 #
 #         #### V2 #####
@@ -1457,6 +1457,14 @@ script:
 #         = 0x2b  01    - ???
 #         = 0x2c  parms - ???
 #
+#	  new 220.12
+#	  = 0x2d	- ???
+#
+#         new 224.3
+#	  = 0x2e	- ???
+#	  = 0x31	- ???
+#	  = 0x32	- ???
+#	  = 0x33	- ???
 #
 # data    = xx xx xx xx xx xx .... / depends on cmd
 # crc     = xor len(paket) - 1 
