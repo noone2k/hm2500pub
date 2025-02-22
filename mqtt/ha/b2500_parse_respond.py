@@ -17,7 +17,7 @@ entityDiz = {
         "do": [ "Entladetiefe (DoD)", None, "%" ],
         "lv": [ "Batterieentladeschwelle", None, None ],
         "cj": [ "Szene", None, None ],
-        "kn": [ "Batteriekapazität", "energy", "kWh" ],
+        "kn": [ "Batteriekapazität", "energy", "Wh" ],
         "g1": [ "Ausgangsleistung 1", "power", "W" ],
         "g2": [ "Ausgangsleistung 2", "power", "W" ],
         "b1": [ "Power Pack 1 verbunden", "plug", None ],
