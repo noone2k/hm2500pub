@@ -1,0 +1,103 @@
+1.6.20 (build 160221) Android App Package
+	1. B2500 removes the original logic, obtains Ct power in the interface and obtains CT id
+	2. After the CT changeover failed, you do not need to select Ct again to click OK to reconnect Ct
+	3. Add a CT list when there is no CT list ( to load the CT list animation )
+
+1.6.20 (build 160220) Android App Package
+	 1. Modify and click OK to exit the CT setting interface
+
+1.6.20 (build 160219) Android App Package
+	1. Modify the automatic mode, click OK and do not return
+	2. Fix the status bar color problem
+	3. Modify the CT list without requesting data to make and do not display
+
+1.6.20 (build 160218) Android App Package
+	1. Modify and optimize the Ct judgment
+	2. B2500 modifies Bluetooth parsing
+	3. Fix iOS countdown stop issue
+	4. Fix the color problem of the time status bar
+	5. Fix the issue that the startup page is stuck after being pushed down by other accounts
+
+1.6.20 (build 160217) Android App Package
+	1. Fixed the problem of stuck on the startup page after being pushed down by other accounts 
+	2. Change the Mqtt parsing CT status field to sg
+
+1.6.20 (build 160216) Android App Package
+	1. B25001. Optimize the CT connection 10 times to obtain the CT power before judging the connection is successful
+	2. Fixed the problem that clicking the button will jump to the home page frequently
+	3. B2500CT Modify the logic according to the new instructions of the device
+
+1.6.20 (build 160215) Android application package
+	1. B2500
+	1. Optimize CT connection and get CT power 10 times before determining that the connection is successful 
+	2. Fix the problem that clicking the button frequently jumps to the homepage
+
+1.6.20 (build 160214) Android application package 
+	1. B2500 modifies the issue that the upgrade directly jumps to the page
+	2. Fix the problem of skip text display
+	3. Fix the problem that the uninstall startup app is stuck
+
+1.6.20 (build 160213) Android App Package
+	1. B2500 modifies the timeout of connected CT, the timeout time of Ct001 is 2 minutes, and that of other CTs is 1 minute
+	2. B2500 Add CT timeout to display connection failure
+	3. B2500 set CT to enter the interface, first set CT to get CT status). 
+
+
+1.6.20 (build 160213) Android App Package 
+	1. Android release package can not enter the APP problem modification
+	2. Report an error exception and add a token as a null judgment.
+
+1.6.20 (build 160211) Android application package 
+	1. Fix the problem of message pop-up window not jumping 
+	2. Check whether the B2500 modification time is repeated 
+	3. Fix the translation problem 
+	4. The ct list does not read local data 
+	5. Adjust B2500, micro-inverse setting interface 
+	6. Modify B2500 to obtain CT status
+
+1.6.20 (build 160210) Android application package 
+	1. Modify the test problem 
+	2. Update the translation text 
+	3. Add skip and countdown prompts for message startup 
+	4. Modify the German power generation translation 
+	5. Add the new ac add process distribution network skip 
+	6. Fix the monthly and annual income issues of ac coupler 
+	7. Fix the layout of the small and small balcony settings
+
+1.6.20 (build 160209) Android application package 
+	1. Test problem modification 
+	2. B2500, micro-inverse adjustment setting interface UI
+	3. Modify the CT and Accoupler settings interface
+
+1.6.20 (build 160208) Android application package (
+	1. Update the problem and modify 
+	2. User feedback to jump to more help WebView, add jump to WebView points 	1 Day ago
+
+1.6.2 (build 160207) Android application package 
+	1. Modify the problem of upgrading the home storage 
+	2. Add the point function of using instructions
+
+1.6.2 (build 160206) Android application package 
+	1. Instructions for use and burying points are added 
+	2. B2500 no longer prompts for upgrading the box, no longer prompts for upgrading after clicking 
+	3. B2500 optimizes CT connection, the connection is successfully displayed online 
+	4. B2500 adds discharge time period burying points 
+	5. Modify screen upgrade test problem 						2 Days ago
+
+1.6.2 (build 160205) Android application package 
+	1. Optimize the CT status judgment of the connection between B2500 second-generation third-generation machine 
+	2. Modify screen upgrade test problems) 		2025-02-24
+
+1.6.2 (build 160204) Android application package (
+	1. Modify screen upgrade problem 
+	2. Modify upgrade problem, HMC-7 is a national upgrade, HMC upgrade version number judgment 3 	2025-02-21
+
+1.6.2 (build 160203) Android application package (
+	1. Upgrade NEW and change it to a small red dot 
+	2. Modify the screen upgrade problem) 			2025-02-20
+
+1.6.2 (build 160202) Android application package (
+	1. Modify screen upgrade problem 
+	2. Optimize B2500 cross-version sensing-free upgrade 
+	3. B2500 adds fourth-generation machine transition 	2025-02-20
+

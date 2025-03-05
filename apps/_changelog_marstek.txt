@@ -1,0 +1,86 @@
+1.6.3 (build 160317) Android application package
+	1. Add new reset server connection information
+
+1.6.3 (build 160315) Android application package
+	 1. Synchronize power zero function
+
+1.6.3 (build 160314) Android application package
+	- for the issue of fixing the problem of stuck in exception waiting
+
+1.6.3 (build 160314) Android application package
+	1. Fix server api request port
+
+1.6.3 (build 160313) Android application package 
+	fixed the problem that the upgrade progress of cross-version is stuck, and optimized the upgrade logic
+
+1.6.3 (build 160311) Android app package 
+	optimized for stuckness issues that may result from upgrade progress
+
+1.6.3 (build 160311) Android app package
+	1. Added a bug in cross-version upgrade
+	2. Added retry rules for all current upgrade logic 
+	3. Improved the transition experience of upgrading retry
+
+1.6.3 (build 160308) Android application package 
+	1. Fix iOS Bluetooth connection problem
+
+1.6.3 (build 160307) Android application package 
+       	1. Fixed the iOS Bluetooth scan connection problem 
+        2. Added the three-phase sum-sum power-compensation function of the ac coupler ct setting interface 
+        3. Added the Ukrainian and Russian multilingual settings
+
+1.6.3 (build 160306) Android application package 
+	1. Fix the server access port 
+	2. Fix the compatibility issue of CT slave displaying small balcony stacking
+
+1.6.3 (build 160304) Android application package 
+ 	solves the default page problem caused by upgrade fallback 
+							2025-02-19
+1.6.3 (build 160303) Android application package 
+ 	switching the port of European server is 8443, and switching the port of American server is 443
+							2025-02-19
+1.6.3 (build 160302) Android application package 
+ 	combine the new port code and switch the old port to the new port
+
+1.6.3 (build 160300) Android application package (testing the port change requirements of http/https) 2025-02-17
+	test the port change requirements of http/https
+
+1.6.3 (build 160301) Android application package 
+	1. Add Venus/CT exception data buried points 
+	2. Add CT002 and CT003 Mqtt functions 
+	3. Add ac coupler to restore mqtt certificate function 
+	4. Modification functions are as follows: 
+		{module: small balcony}-{func: OTA upgrade}: 
+			- Compatible with stacked small balcony upgrades 
+	5. Modification functions are as follows: 
+		{module: buried point}-{func: buried point strategy}: 
+			- The buried point strategy is adjusted to feedback click only when it is reported.
+
+	Important updates:
+		1. Added the upgrade function of home storage screen.
+		2. The second generation of outdoor power supply is compatible and adaptable. 
+
+1.6.3 (build 160301) 
+	1. Add Venus/CT exception data buried points 
+	2. Add CT002 and CT003 Mqtt functions 
+	3. Add ac coupler to restore mqtt certificate function 
+	4. Modification functions are as follows: 
+		{module: small balcony}-{func: OTA upgrade}: 
+			- Compatible with stacked small balcony upgrades 
+	5. Modification functions are as follows: 
+		{module: buried point}-{func: buried point strategy}: 
+			- The buried point strategy is adjusted to feedback click only when it is reported.
+
+	Important updates:
+		1. Added the upgrade function of home storage screen.
+		2. The second generation of outdoor power supply is compatible and adaptable.
+
+1.6.2 (build 160212) Android application package (
+	Modify the current request port (http->8080,https->8443)
+	(Note, there is no privacy link 		2025-02-14
+
+1.6.2 (build 160212) Android application package 
+	for CT list function, 
+	judgment and processing of specific users) 2025-02-13
+
+View more
