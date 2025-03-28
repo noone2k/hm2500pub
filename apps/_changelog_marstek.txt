@@ -1,3 +1,120 @@
+1.6.30 (build 163033) Android application package
+	1. Modify the group sharing function 
+	2. Solve the problem that iOS users cannot submit live pictures 
+	3. After adding a group to B2500, enter the editing interface and click to return to the device list interface 
+	4. Prevent multiple clicks to call the group creation interface when creating a group 
+	5. Add a description of the small balcony surplus power Internet access 
+	6. Modify the WiFi network configuration text font 
+	7. Update the small balcony mode selection and manual mode settings 
+	8. Update the small balcony ct settings and support ecoTracker and P1 meter
+	9. Add a search box for country and region selection 
+	10. Switch the small balcony ct setting to the new version 
+	11. Optimize the small balcony manual mode setting 
+	12. Optimize the ct chart update display 
+	13. Optimize the incomplete display of the ota upgrade content detection page 
+	14. B2500 combination adds devices, connects devices, sends the command to set the combination mode, sends successfully, and the device is displayed in the added device UI 
+	15. Solve the B2500 combination, save the device ID, enter the device list, switch the device, read the cache is the combination ID, and the app enters the login interface 
+	16. B2500 combination adds devices, sends commands to switch to parallel mode 
+	17. Modify the combination list and click the event area 
+	18. B2500 modifies HMB142 to support upgrades with power packs 
+	19. B2500 enters the editing interface after adding the combination, and clicks to return to the device list interface
+
+..... to lazy to copy more ... maybe later ...
+
+1.6.30 (build 163031) Android application package
+	1.Changed the Ukrainian and Russian display issues under Chinese 
+	2.Fixed the CT setting issue of skipping the network configuration prompt 
+	3.Fixed the battery display error issue under ct003 mqtt 
+	4.Optimized the chart display issue 
+	5.Adjusted the English title of the outdoor power supply setting page 
+	6.Replaced the old outdoor power supply of HMD with the new page 
+	7.Combined the battery charging and discharging of B2500 chart into one 
+	8.Modified the following functions:{module: Bluetooth framework}-{func: Bluetooth scan}: 
+		-Original solution: Triggering a scan will stop the last scan
+		-Current solution: If the current scan is in progress, it will not be triggered again until the last scan is finished.
+	9. B2500 optimizes Bluetooth connection 
+	10. Fixed the problem of incomplete display of multi-module upgrade version information during the adding process 
+	11. Bluetooth scanning and adding also follow the three-step process
+
+1.6.30 (build 163030) Android application package
+	1. Modify the outdoor power upgrade problem 
+	2. Modify the functions as follows: {module: startup}-{func: startup page}: 
+		- Solve the page white screen problem (currently adjusted according to the system background color
+	3. The problem of no data popping up on the income page was solved 
+	4. Scan to add devices for optimization and modification 
+	5. Increase the font of wifi prompts, and optimize the Wifi configuration network prompts 
+	6. Modify the second generation home storage test problem 
+	7. Modify the following functions: {module: Bluetooth framework}-{func: Bluetooth scan}: 
+		- Solve the crash problem caused by controller 2
+	8. Added Czech and Hungarian language support 
+	9. Fixed the problem that the cache token is empty and requires repeated login 
+	10. Fixed the problem of incomplete chart display 
+	11. Fixed the problem of incorrect time display in manual mode of small balcony 
+	12. Fixed the problem of CT002 and CT003 mqtt data display
+
+1.6.30 (build 163029) Android application package
+	1. Update ct003 manufacturer selection UI
+	2. For devices other than B2500 and Accoupler, the default three-step process is used for adding devices. 
+	3. Fixed the problem that there is a chance of adding errors when adding Bluetooth devices. 
+	4. Fixed the problem of occasional firmware upgrade detection when Bluetooth is not connected. 
+	5. Fixed the mqtt connection status of ct002 and ct003. 
+	6. Added instructions for the grid-connected power version setting. 
+	7. Modified the chart test problem. 
+	8. Modified the outdoor power test problem.
+
+
+1.6.30 (build 163021) Android application package
+	1. Modify the functions as follows: {module: tracking point}-{func: login tracking point}: 
+		- Complete the login tracking point implantation 
+	2. Remove the EPS setting of the second generation of home storage 
+	3. Modify the discharge depth of the second generation of outdoor power supply 
+	4. Internationalize the error code time 
+	5. Restore the factory reset error code of the second generation of home storage and the second generation of outdoor power supply 
+	6. Add device adaptation for HMD-N7 
+	7. Modify the problem that some live pictures cannot be obtained according to iOS user feedback
+
+1.6.30 (build 163020) Android application package
+	1. Synchronize 1.6.21 function 
+	2. Home storage second generation adaptation 
+	3. Outdoor power supply N4, N6 upgrade problem modification
+
+
+1.6.21 (build 162108) Android application package
+	1. Add ct002 slave HMJ display 
+	2. When ac coupler fails to obtain the version, it will display V-- 
+
+1.6.21 (build 162107) Android application package
+	1. Add ct002 slave HMJ display 
+	2. When ac coupler does not get the version, it will display V--
+	3. After successfully setting the IP, set the current ct once
+
+1.6.21 (build 162102-162106) Android application package
+
+	1. Change the units of w, kw, kwh, and wh to capital W 
+	2. This version temporarily blocks the pop-up window for line sequence detection failure 
+	3. Process kWh units 
+	4. Supplement translation text 
+	5. Local ct list changes with the model 
+	6. B2500 adds parsing of Bluetooth Wi-Fi status
+	......
+
+
+1.6.21 (build 162101) Android application package
+	1. Pull down to refresh the copywriting 
+	2. Modify the B2500 time period to bury the point report 
+	3. Add the advanced ac coupler function (restore mqtt certificate)
+	4. Added ac coupler mDns ip comparison and synchronization)
+
+1.6.21 (build 162100) Android application package
+	1.Update power supply N2, N4, N6 upgrade and adapt 
+	2.Home storage chart modification
+
+1.6.3 (build 160318) Android application package
+	1. Fixed the problem of not destroying the ct view exit timer 
+	2. Add mqtt text translation 
+	3. Adapt HM_V3000 device 
+	4. Fixed the problem of adding the list device image in the ac coupler Bluetooth
+
 1.6.3 (build 160317) Android application package
 	1. Add new reset server connection information
 
@@ -83,4 +200,134 @@
 	for CT list function, 
 	judgment and processing of specific users) 2025-02-13
 
+1.6.2 (build 160211) Android application package (1. Open internal test CT to specific customers) 2025-02-13
+1.6.2 (build 160210) Android application package (
+1. When switching the device, clear the time period settings obtained by the previous device to avoid confusion. 2. B2500 discharge 2025-02-13
+1.6.2 (build 160210) Android application package (
+Temporarily blocked WIFI module upgrade function repair B2500Mqtt setting time interrupt sending time failed with 0 settings 2025-02-13
+1.6.2 (build 160209) Android application package (
+Temporarily blocked WIFI module upgrade function repair B2500Mqtt setting time interrupt sending time failed with 0 settings 2025-02-13
+1.6.2 (build 160209) Android application package (
+Temporarily blocked WIFI module upgrade function repair B2500Mqtt setting time interrupt sending time failed with 0 settings 2025-02-13
+1.6.2 (build 160208) Android application package (
+1. The four-digit version of ac can be displayed in settings 2. Fix buglist problem 3. User feedback input text limit 2025-02-12
+1.6.2 (build 160207) Android application package (
+1. The four-digit version of ac can be displayed in settings 2. Fix buglist problem 3. User feedback input text limit 2025-02-12
+1.6.2 (build 160206) Android application package (
+B2500 removes the cache of B2500 module that enters the settings interface to read the Wi-Fi module version number. Click to add 2025-02-11
+1.6.2 (build 160205) Android application package (fix the problem of outdoor power supply and household storage upgrade) 2025-02-11
+1.6.2 (build 160204) Android application package (
+[fix] Modify revenue statistics, monthly and annual statistics, the unit is too close to the bar chart [fix] The modification function is as follows: {m 2025-02-11
+1.6.2 (build 160204) Android application package (
+[fix]The modification function is as follows: {module: small balcony}-{func: FC4 upgrade}: - 2025-02-11
+1.6.2 (build 160203) 1. Fix the test feedback problem 2025-02-08
+1.6.2 (build 160202) 1. Replace EnergyCube to Venus
+2. Add ac coupler's support for ecoTracker 2025-02-08
+1.6.2 (build 160201) Android application package (anomaly data reporting of Venus and CT, Spring Festival issues, B2500's wifi module upgrade, and feedback added pictures) 2025-02-07
 View more
+
+
+marstek:
+
+1.6.2 (build 160211) Android application package (1. Open internal test CT to specific customers) 4 Hours ago
+1.6.2 (build 160210) Android application package (1. Clear the time obtained by the previous device when switching the device 6 Hours ago
+1.6.2 (build 160210) Android application package (temporarily block WIFI module upgrade function to repair B2500M 6 Hours ago
+1.6.2 (build 160209) Android application package (temporarily block WIFI module upgrade function repair B2500M 8 Hours ago
+1.6.2 (build 160209) Android application package (temporarily block WIFI module upgrade function repair B2500M 11 Hours ago
+1.6.2 (build 160208) Android application package (
+1. The four-digit version of ac can be displayed in settings 2. Fix buglist problem 3. User feedback input text limit 1 Day ago
+1.6.2 (build 160207) Android application package (
+1. The four-digit version of ac can be displayed in settings 2. Fix buglist problem 3. User feedback input text limit 1 Day ago
+1.6.2 (build 160206) Android application package (
+B2500 removes the cache that enters the settings interface to read the Wi-Fi module version number. In the upgrade of the B2500 module, click to raise 2 Days ago
+1.6.2 (build 160205) Android application package (fix the problem of outdoor power supply and household storage national upgrade) 2 Days ago
+1.6.2 (build 160204) Android application package (
+[fix] Modify revenue statistics, monthly and annual statistics, the unit is too close to the bar chart [fix] Modify functions are as follows: {m 2 Days ago
+1.6.2 (build 160204) Android application package (
+[fix]The modification function is as follows: {module: small balcony}-{func: FC4 upgrade}: - 2 Days ago
+1.6.2 (build 160203) 1. Fix the test feedback problem 2025-02-08
+1.6.2 (build 160202) 1. Replace EnergyCube to Venus /  2. Add ac coupler's support for ecoTracker 2025-02-08
+1.6.2 (build 160201) Android application package (anomaly data reporting of Venus and CT, Spring Festival issues, B2500's wifi module upgrade, and feedback added pictures) 2025-02-07
+1.6.1 (build 160101) Android application package (combined with Shunmin code) 2025-02-07
+1.6.0 (build 160052) Solve the problem of CT interface stuck 2025-01-25
+1.6.1 (build 160101) Stacked small balcony test 2025-01-24
+1.6.1 (build 160101) 1. Compatible with M1200N, A1000ProN, S1000ProN series upgrade 2025-01-20
+
+
+1.6.0 (build 160051) 2025-01-17
+1.6.0 (build 160050) 2025-01-17
+1.6.0 (build 160048) 2025-01-17
+1.6.0 (build 160047) 2025-01-17
+1.6.0 (build 160046) 1. Fix buglist issue 2025-01-16
+1.6.0 (build 160045) 2025-01-16
+1.6.0 (build 160044) 2025-01-16
+1.6.0 (build 160043) 2025-01-16
+1.6.0 (build 160044) 1. Fix OTA issue 2025-01-16
+1.6.0 (build 160043) 2025-01-16
+1.6.0 (build 160042) 2025-01-15
+1.6.0 (build 160040) 1-Modify==Small balcony==Separation line problem2-Modify==Small balcony==International text overflow problem of setting page3-Modify==Home storage 2025-01-15
+1.6.0 (build 160039) 2025-01-15
+1.6.0 (build 160038) Optimizing internationalization [YuDian Internet] Text overflow problem 2025-01-15
+1.6.0 (build 160037) Modify the version of the small balcony UI 2025-01-14
+1.6.0 (build 160037) 1. Fix the test feedback problem 2. Added configuration to complete for OTA detection 2025-01-14
+1.6.0 (build 160036) 1. Fixed test feedback problem 2. Added a small balcony, ac, and B2500 report in 5 minutes 3. Optimized iOS Bluetooth mac acquisition 2025-01-14
+1.6.0 (build 160034) Test:
+[1] Yudian Internet access[2] Setting page new UI
+[3] Prompt for modifying the device name and entering special characters [4] The signal strength is out 2025-01-13
+1.6.0 (build 160033) 1. Fixed test feedback problem 2. Added ac <147 version configuration trilogy 3. Compatible with ios mDns permissions, completing p1 2025-01-13
+1.6.0 (build 160032) 1. Fix buglist problem point 2025-01-12
+1.6.0 (build 160032) 1. Modify the test problem 2025-01-10
+1.6.0 (build 160031) Restore legacy Bluetooth connection 2025-01-10
+1.6.0 (build 160031) 1. Modify the test problem. 2025-01-10
+1.6.0 (build 160030) 1. Fix the test feedback problem 2025-01-09
+1.6.0 (build 160029) Small balcony full power upload beta version 3 2025-01-08
+1.6.0 (build 160029) 1. Fix the test feedback issue 2025-01-08
+1.6.0 (build 160028) 1. Fix the test feedback problem 2025-01-07
+
+
+
+1.6.0 (build 160027) Beta version uploaded by full power on small balcony 2 2025-01-06
+1.6.0 (build 160027) 1. Fix the test feedback problem 2025-01-06
+1.6.0 (build 160026) 1. Fix apk compatibility issue 2. Fix test buglist 2025-01-05
+1.6.0 (build 160025) Fix compatibility issues for large balcony upgrades 2025-01-03
+1.6.0 (build 160025) 1. Added ac coupler configuration process 2. Fixed issues related to dimension upgrade application 3. Fixed buglist issue 2025-01-03
+1.6.0 (build 160024) 1. Fix buglist problem point 2025-01-02
+1.6.0 (build 160023) 1. Fix buglist problem point 2024-12-31
+1.6.0 (build 160021) 1. Get real-time data. 2024-12-30
+1.6.0 (build 160020) 1..Fix M2200N compatibility issue 2. Optimize user feedback No feedback submitted Yes, enter, directly enter the new problem interface 3. 2024-12-29
+1.6.0 (build 160020) 1. Modify the synchronization time command 2. Modify the synchronization time and Bluetooth name of M5000 3. Update the corresponding relationship of the outdoor power supply OTA model 4. 2024-12-27
+1.6.0 (build 160019) 1. Modification of the test problem of the first generation of the home storage 2024-12-26
+1.6.0 (build 160018) 1. Add M5000 device list page picture display.
+2..Family storage generation, summarized and added on the same day.
+3. The modification function is as follows: - New 2024-12-26
+1.6.0 (build 160017) 1. Say there is an interface to add a new version of the user feedback portal 2. Add user feedback answer analysis and question analysis 3.fix:1. Optimize users 2024-12-25
+1.6.0 (build 160016) Fixed the upgrade problem that was reported by yesterday's test and the Back up enable setting problem that was reported by downstairs. 2024-12-25
+1.6.0 (build 160014) 1. The home storage weather function has been added.
+2. Added the A Coupler Dimension Upgrade Function (A device version needs to be higher than 146)
+3.M2 2024-12-24
+1.6.0 (build 160013) 1. The new demand for home storage is synchronized. 2024-12-23
+1.6.0 (build 160011) Test the ac coupler slave upgrade and M220N ota upgrade 2024-12-20
+1.6.0 (build 160010) 1-Solve the problem of scanning stuck 2-Solve the problem of Bluetooth cache still exists after connecting to the device 3-Solve the device switching data malfunction 4-Scan not 2024-12-19
+1.6.0 (build 160009) Update dynamic acquisition device logic 2024-12-19
+1.6.0 (build 160008) Iterative dynamic acquisition of device type function 2024-12-19
+1.6.0 (build 160007) Added dynamic device type compatibility 2024-12-18
+1.6.0 (build 160006) Add dynamic acquisition device type 2024-12-17
+1.6.0 (build 160005) 2024-12-13
+1.6.0 (build 160004) 1. Add ct003 meter setting command 2. Fix module upgrade problem 3. Optimize ac coupler slave upgrade 2024-12-12
+1.6.0 (build 160002) 2024-12-11
+1.6.0 (build 160001) 2024-12-09
+1.5.10 (build 151012) Testing outdoor power supply 2024-12-09
+1.5.10 (build 151011) Blocked buried point report 2024-12-05
+1.5.10 (build 151010) 2024-12-05
+1.5.10 (build 151009) 2024-12-05
+1.5.10 (build 151008) 2024-12-05
+1.5.10 (build 151007) 2024-12-04
+1.5.10 (build 151006) 2024-12-04
+1.5.10 (build 151005) 2024-12-04
+1.5.10 (build 151003) 2024-12-04
+1.5.10 (build 151004) 1. Add animation to micro-inverse settings 2. Add FC41D module upgrade 3. Optimize network distribution logic 4. ct list changed to obtain from server 2024-12-03
+1.5.10 (build 151003) 2024-12-02
+1.5.10 (build 151001) 2024-11-29
+1.5.9 (build 15911) 1. Fix the issue of selecting MQTT certificates in the home storage 2. Fix the problem of displaying ct003 interface 3. Add ct003 upgrade pop-up window 2024-11-27
+1.5.9 (build 15911) Cancel firebase burying point report 2024-11-27
+
