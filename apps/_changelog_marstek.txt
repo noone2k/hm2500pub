@@ -1,3 +1,27 @@
+1.6.30 (build 163039) Android Application Package 
+	1. Click the combination to jump to the B2500 device, save the Bluetooth address to the memory, and modify the problem of B2500 getting disordered data 
+	2. Fix the power min and max range errors 
+	3. Fix the balcony series setting p1 ip failure problem 
+	4. Only read from sp when the device homepage mac is empty 
+	5. Change the input login and registration password indicator icon 
+	6. Modify the device list to get loaded 
+	7. Adjust the upgrade details position 
+	8. Login problem modification 
+	9. Fix the balcony series mqtt reading supplementary power mode error 
+	10. B2500 combination jumps to the B2500 device homepage and transmits to the power
+
+1.6.30 (build 163038) Android Application Package 
+	1. Added a call interface to the B2500 combination setting interface to check whether user feedback has been submitted 
+	2. When the B2500 combination power is zero, the solar panel is displayed in gray 
+	3. Adjusted the upgrade details page display 
+	4. How to have device ID and mac address on the B2500 device main interface, no longer fetch the device ID and mac address from the cache 
+	5. Modified the combination's daily power generation and the cumulative load power of the day to be less than 1000 in wh, and greater than 1000/1000 in Kwh
+	6. Updated CT setting prompts, with different texts for different results 
+	7. Added balcony series phase switching and charging mode reading 
+	8. Updated small balcony homepage UI, and displayed icons when there is residual power to surf the Internet 
+	9. Updated p1 meter ip search interface UI
+	10. Adjust the default location for data recovery
+
 1.6.30 (build 163037) Android Application Package
 	1. Fixed the problem of left layout after the small balcony page is full screen 
 	2. Fixed the problem of freezing when clicking the small balcony power 
