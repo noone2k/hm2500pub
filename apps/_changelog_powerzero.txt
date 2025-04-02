@@ -1,3 +1,14 @@
+1.6.21 (build 162103) Android Application Package
+	1. Modify HMB 142 and above versions to support upgrade with power pack
+
+1.6.21 (build 162102) Android Application Package
+	1. Click OK on B2500 discharge setting, add error code reporting, and remove buried points
+
+1.6.21 (build 162101) Android App Package
+	1. HMB failed to upgrade to version 141 
+	2. HMJ equipment CT is prone to interruption 
+	3. Modify the working mode of B2500, and report a large number of buried point problems
+
 1.6.20 (build 160221) Android App Package
 	1. B2500 removes the original logic, obtains Ct power in the interface and obtains CT id
 	2. After the CT changeover failed, you do not need to select Ct again to click OK to reconnect Ct
@@ -100,4 +111,59 @@
 	1. Modify screen upgrade problem 
 	2. Optimize B2500 cross-version sensing-free upgrade 
 	3. B2500 adds fourth-generation machine transition 	2025-02-20
+
+
+
+
+
+1.6.0 (build 160104) Android application package (anomaly data reporting of Venus and CT, Spring Festival issues, B2500's wifi module upgrade, and feedback added pictures) 2025-02-07
+1.6.0 (build 160103) Android application package (anomaly data reporting of Venus and CT, Spring Festival issues, B2500's wifi module upgrade, and feedback added pictures) 2025-02-07
+1.6.0 (build 160003) Android application package (combined with Shunmin code) 2025-02-05
+1.6.0 (build 160003) Android application package 2025-01-22
+1.6.0 (build 160002) 2025-01-22
+1.6.0 (build 160001) 2025-01-21
+1.6.0 (build 160000) 1.M1200N,A1000ProN,S1000ProN series upgrade 2025-01-20
+1.6.0 (build 160000) 2025-01-20
+1.6.0 (build 160001) 1. Adapt to outdoor power supply. 2025-01-03
+1.5.10 (build 151013) B2500 upgrade problem modification 2024-12-20
+1.5.10 (build 151012) 1. Modify the home storage test problem.
+2.B2500, add the path to upgrade packages in developer mode to solve the problem that it cannot be upgraded in developer mode.
+3 2024-12-20
+1.5.10 (build 151010) 2024-12-19
+1.5.10 (build 151007) 2024-12-19
+1.5.10 (build 151007) Update dynamic acquisition device logic 2024-12-19
+1.5.10 (build 151006) Iterative dynamic acquisition of device type function 2024-12-19
+
+------------------------------------
+
+
+1.6.0 (build 160104) Android application package (anomaly data reporting of Venus and CT, Spring Festival issues, B2500's wifi module upgrade, and feedback added pictures)
+
+1.6.0 (build 160103) Android application package (anomaly data reporting of Venus and CT, Spring Festival issues, B25 2025-02-07
+1.6.0 (build 160003) Android application package (combined with Shunmin code) 2025-02-05
+1.6.0 (build 160003) Android application package 2025-01-22
+1.6.0 (build 160002) 2025-01-22
+1.6.0 (build 160001) 2025-01-21
+1.6.0 (build 160000) 1.M1200N,A1000ProN,S1000ProN series upgrade 2025-01-20
+1.6.0 (build 160000) 2025-01-20
+1.6.0 (build 160001) 1. Adapt to outdoor power supply. 2025-01-03
+1.5.10 (build 151013) B2500 upgrade problem modification 2024-12-20
+1.5.10 (build 151012) 1. Modify the home storage test problem.
+2.B2500, add the path to upgrade packages in developer mode to solve the problem that it cannot be upgraded in developer mode.
+3 2024-12-20
+1.5.10 (build 151010) 2024-12-19
+1.5.10 (build 151007) 2024-12-19
+1.5.10 (build 151007) Update dynamic acquisition device logic 2024-12-19
+1.5.10 (build 151006) Iterative dynamic acquisition of device type function 2024-12-19
+1.5.10 (build 151005) 2024-12-18
+1.5.10 (build 151004) Added dynamic device type compatibility 2024-12-18
+1.5.10 (build 151001) 2024-12-17
+1.5.9 (build 1597) Compatible with EZA (household storage) 2024-12-16
+1.5.9 (build 1596) Compatible with EZA devices 2024-12-16
+1.5.9 (build 1596) 2024-12-16
+1.5.9 (build 1595) 2024-12-13
+1.5.9 (build 1594) When the B2500 interface requests the firmware version, copy it to deviceNewVersion. Click the upgrade box to confirm and you can determine the version. 2024-12-12
+1.5.9 (build 1593) 2024-12-11
+1.5.9 (build 1592) 2024-12-11
+1.5.9 (build 1591) 2024-12-10
 

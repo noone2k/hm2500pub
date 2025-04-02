@@ -1,3 +1,47 @@
+1.6.30 (build 163037) Android Application Package
+	1. Fixed the problem of left layout after the small balcony page is full screen 
+	2. Fixed the problem of freezing when clicking the small balcony power 
+	3. Replace the share icon 
+	4. Expand the click area of ​​the B2500 combination navigation bar 
+	5. After the user feedback is not successful in submitting data, return to the settings interface 
+	6. Return to the combination list to refresh the combination list 
+	7. In the B2500 combination add device interface, click the question mark to jump to the help interface 
+	8. Fixed the B2500 combination test bug
+	9. Change the exit direction of the small balcony ct setting page 
+	10. Update the manual mode time selector component 
+	11. Fix the problem of no response when clicking the last step of adding a device 
+	12. Add combination internationalization translation and modify the combination chart problem
+
+1.6.30 (build 163036) Android Application Package
+	1. Upgrade and modify the second generation of outdoor power supply 
+	2. Optimize the B2500 combination to display different power 
+	3. Return to the combination list interface, network request data to refresh the combination list 
+	4. The device in the B2500 combination sharing combination is not in the device list. 
+		Click "Not Supported" to challenge to the B2500 homepage, prompting that there is no such device 
+	5. Combination list, the selection status is displayed on the right side of the currently selected combination 
+	6. B2500 combination discharge setting, the maximum power of the parallel mode is halved 
+	7. B2500 combination, when the power is zero, stop the current animation 
+	8. Add a slave click to jump to the B2500 device homepage 
+	9. B2500 combination optimization has no host node, there is a slave node below, and the slave node below is not displayed 
+	10. Optimize the B2500 combination interface to obtain power data. There is a B2500 device in the combination. 
+		After two minutes, it will automatically refresh and support manual refresh 
+	11. Enter the combination interface, it is parallel mode, and you cannot click to cancel the parallel
+
+1.6.30 (build 163035) Android application package
+	1. The chart realizes full-screen switching 
+	2. B2500 combination Click the B2500 device to jump to the B2500 device main interface, click the button to send instructions to set or cancel parallel 
+	3. Click the combined device to jump to the B2500 main interface 
+	4. B2500 Click the combined device to jump to the B2500 device main interface 
+	   (word breaks are added when creating the combination, and the test needs to delete the previous combination and recreate it)
+	5. Test question modification.
+
+1.6.30 (build 163034) Android application package
+	1. The chart realizes full-screen switching 
+	2. B2500 combination Click the B2500 device to jump to the B2500 device main interface, click the button to send instructions to set or cancel parallel 
+	3. Click the combined device to jump to the B2500 main interface 
+	4. B2500 Click the combined device to jump to the B2500 device main interface 
+	   (word breaks are added when creating the combination, and the test needs to delete the previous combination and recreate it)
+
 1.6.30 (build 163033) Android application package
 	1. Modify the group sharing function 
 	2. Solve the problem that iOS users cannot submit live pictures 
@@ -19,7 +63,11 @@
 	18. B2500 modifies HMB142 to support upgrades with power packs 
 	19. B2500 enters the editing interface after adding the combination, and clicks to return to the device list interface
 
-..... to lazy to copy more ... maybe later ...
+1.6.30 (build 163032) Android application package
+	1. Modification of outdoor power supply and home storage test issues 	
+	2. B2500 combination module test. (Except for setting charging and discharging mode)
+	3. Optimize ct chart display (ct002/ct003/ct switching page)
+	4. Resend the OTA CRC check after timeout
 
 1.6.30 (build 163031) Android application package
 	1.Changed the Ukrainian and Russian display issues under Chinese 
